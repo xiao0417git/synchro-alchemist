@@ -1,0 +1,2621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>シンクロ・アルケミスト 〜価値観調合の儀〜</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cinzel, Noto Sans JP & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@600;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', 'sans-serif'],
+            display: ['"Cinzel"', '"Noto Sans JP"', 'serif'],
+            num: ['"Inter"', 'sans-serif'],
+          },
+          colors: {
+            alch: {
+              bg: '#080C1A',
+              surface: '#111831',
+              panel: '#192347',
+              gold: '#F59E0B',
+              goldLight: '#FDE68A',
+              emerald: '#10B981',
+              cyan: '#06B6D4',
+              rose: '#F43F5E',
+              violet: '#8B5CF6',
+              parchment: '#F5EEDB',
+              parchmentDark: '#E6D8B8'
+            }
+          },
+          boxShadow: {
+            'mystic': '0 12px 32px -6px rgba(0, 0, 0, 0.65), 0 0 20px rgba(245, 158, 11, 0.14)',
+            'gold-glow': '0 0 24px rgba(245, 158, 11, 0.5)',
+            'emerald-glow': '0 0 24px rgba(16, 185, 129, 0.45)',
+            'rose-glow': '0 0 24px rgba(244, 63, 94, 0.45)',
+            'btn-3d': '0 4px 0 rgba(0, 0, 0, 0.55)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #080C1A;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(139, 92, 246, 0.16) 0%, transparent 42%),
+        radial-gradient(circle at 88% 22%, rgba(16, 185, 129, 0.12) 0%, transparent 44%),
+        radial-gradient(circle at 50% 88%, rgba(245, 158, 11, 0.13) 0%, transparent 50%),
+        radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 100% 100%, 26px 26px;
+      color: #F8FAFC;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input, textarea, select {
+      user-select: text;
+    }
+
+    /* Parchment Texture for Revealed Cards */
+    .parchment-card {
+      background-color: #F6EFE0;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(217, 179, 108, 0.22) 0%, transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(180, 138, 70, 0.22) 0%, transparent 50%),
+        linear-gradient(160deg, #FAF5E8 0%, #EFE2C4 100%);
+      color: #1E1B18;
+    }
+
+    /* Alchemy Magic Circle Card Back */
+    .alchemy-card-back {
+      background: linear-gradient(145deg, #162147 0%, #0B1126 100%);
+      background-image:
+        radial-gradient(circle at 50% 50%, transparent 33%, rgba(245, 158, 11, 0.22) 34%, rgba(245, 158, 11, 0.22) 36%, transparent 37%),
+        radial-gradient(circle at 50% 50%, transparent 48%, rgba(6, 182, 212, 0.16) 49%, rgba(6, 182, 212, 0.16) 51%, transparent 52%),
+        linear-gradient(145deg, #162147 0%, #0B1126 100%);
+    }
+
+    /* 3D Card Flip Animation */
+    .perspective-1000 {
+      perspective: 1100px;
+    }
+
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.72s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-style: preserve-3d;
+    }
+
+    .flip-card-inner.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 1.4rem;
+    }
+
+    .flip-card-back {
+      transform: rotateY(180deg);
+    }
+
+    /* Button Tactile Press */
+    .btn-tactile {
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+    }
+    .btn-tactile:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+    }
+
+    /* Drag & Drop */
+    .dragging-card {
+      opacity: 0.45;
+      transform: scale(0.96);
+    }
+    .drag-over-card {
+      border-color: #F59E0B !important;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.35) !important;
+    }
+
+    /* Shake & Crack Animation for Discord */
+    @keyframes shakeCrack {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-9px) rotate(-2.5deg); }
+      30% { transform: translateX(9px) rotate(2.5deg); }
+      45% { transform: translateX(-7px) rotate(-1.5deg); }
+      60% { transform: translateX(7px) rotate(1.5deg); }
+      75% { transform: translateX(-4px); }
+    }
+    .animate-shake {
+      animation: shakeCrack 0.6s ease-in-out;
+    }
+
+    /* Pulse Glow for Resonance Link */
+    @keyframes pulseGold {
+      0%, 100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.45); }
+      50% { box-shadow: 0 0 26px rgba(245, 158, 11, 0.9); }
+    }
+    .resonance-glow {
+      animation: pulseGold 2s infinite ease-in-out;
+    }
+
+    /* Scale Beam Tilt Animation */
+    .scale-beam {
+      transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: center center;
+    }
+
+    /* Pop-in Animation */
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.93) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .animate-pop-in {
+      animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #080C1A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2B3A70;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-alch-surface/90 backdrop-blur-md border-b border-amber-500/25 sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer" onclick="app.confirmResetHome()">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center text-alch-bg font-display font-black text-base sm:text-lg shadow-gold-glow border border-amber-200/40 shrink-0">
+          <i class="fa-solid fa-flask-vial"></i>
+        </div>
+        <div>
+          <div class="font-display text-[9px] sm:text-[10px] tracking-[0.22em] text-amber-400 font-bold leading-none">
+            SYNCHRO ALCHEMIST
+          </div>
+          <h1 class="font-black text-xs sm:text-lg tracking-wide text-white leading-tight flex items-center gap-2">
+            シンクロ・アルケミスト
+            <span class="hidden md:inline-block text-[11px] bg-amber-500/15 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full font-bold">
+              〜価値観調合の儀〜
+            </span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- Status & Controls -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <div id="header-status" class="hidden items-center gap-2 bg-alch-bg/90 px-2.5 sm:px-3 py-1.5 rounded-xl border border-amber-500/30 text-[11px] sm:text-xs font-bold">
+          <!-- Populated dynamically -->
+        </div>
+
+        <button onclick="app.openRulesModal()" class="px-2.5 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-amber-400/25 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition" title="魔導書（ルール説明）">
+          <i class="fa-solid fa-book-open"></i>
+          <span class="hidden sm:inline">魔導書（ルール）</span>
+        </button>
+
+        <button id="sound-toggle-btn" onclick="sound.toggleMute()" class="px-2.5 py-2 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-indigo-400/25 text-emerald-400 text-xs sm:text-sm transition flex items-center gap-1" title="効果音 ON/OFF">
+          <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main id="app-container" class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-4 py-5 sm:py-7 flex flex-col">
+    <!-- Dynamic Views Rendered Here -->
+  </main>
+
+  <!-- Custom Toast Notification -->
+  <div id="toast-container" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2 w-full max-w-md px-4"></div>
+
+  <!-- Modal Overlay -->
+  <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+    <div id="modal-box" class="bg-alch-surface text-slate-100 rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl border border-amber-500/35 animate-pop-in max-h-[90vh] overflow-y-auto">
+      <!-- Modal Content Injected Here -->
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * 1. RICH MYSTIC SOUND ENGINE (Web Audio API Synthesizer)
+     * ============================================================================
+     */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        const icon = document.getElementById('sound-icon');
+        if (this.muted) {
+          icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+          app.showToast('サウンドをミュートしました', 'info');
+        } else {
+          this.init();
+          icon.className = 'fa-solid fa-volume-high text-emerald-400';
+          this.playCrystalChime();
+          app.showToast('サウンドをオンにしました', 'success');
+        }
+      }
+
+      playTone(freq, type, duration, delay = 0, volume = 0.14) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(volume, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.03);
+      }
+
+      playTap() {
+        this.playTone(640, 'sine', 0.07, 0, 0.1);
+      }
+
+      // 水晶共鳴音
+      playCrystalChime() {
+        this.playTone(880, 'sine', 0.3, 0, 0.12);
+        this.playTone(1318.51, 'sine', 0.4, 0.06, 0.11);
+        this.playTone(1760, 'triangle', 0.45, 0.12, 0.07);
+      }
+
+      // カード並び替え音
+      playSwap() {
+        this.playTone(460, 'triangle', 0.08, 0, 0.12);
+        this.playTone(690, 'triangle', 0.1, 0.05, 0.12);
+      }
+
+      // 共鳴リンク接続音
+      playResonanceLock() {
+        this.playTone(587.33, 'sine', 0.18, 0, 0.14);
+        this.playTone(880, 'triangle', 0.24, 0.07, 0.14);
+        this.playTone(1174.66, 'sine', 0.35, 0.14, 0.12);
+      }
+
+      // 天秤の傾き＆判定音
+      playScaleTilt(isAscending) {
+        // 揺れる金属音
+        this.playTone(720, 'sine', 0.15, 0, 0.1);
+        this.playTone(680, 'sine', 0.15, 0.14, 0.1);
+        if (isAscending) {
+          this.playTone(523.25, 'sine', 0.22, 0.32, 0.15);
+          this.playTone(659.25, 'sine', 0.22, 0.42, 0.15);
+          this.playTone(783.99, 'triangle', 0.4, 0.52, 0.16);
+        } else {
+          this.playTone(392.00, 'triangle', 0.22, 0.32, 0.15);
+          this.playTone(311.13, 'sawtooth', 0.4, 0.46, 0.13);
+        }
+      }
+
+      // 禁句アラート音
+      playTabooAlert() {
+        this.playTone(440, 'square', 0.12, 0, 0.1);
+        this.playTone(349.23, 'square', 0.18, 0.1, 0.1);
+      }
+
+      // カードめくり音（成功時は高く澄んだ音、失敗時はクリスタル砕け音）
+      playCardFlip(index = 0, isMistake = false) {
+        if (isMistake) {
+          // クリスタル砕け音（不協和音＋高周波ノイズ風）
+          this.playTone(233.08, 'sawtooth', 0.28, 0, 0.16);
+          this.playTone(220.00, 'sawtooth', 0.32, 0.04, 0.16);
+          this.playTone(146.83, 'square', 0.4, 0.1, 0.15);
+          this.playTone(1480, 'triangle', 0.08, 0.02, 0.12);
+          this.playTone(1120, 'triangle', 0.1, 0.07, 0.12);
+        } else {
+          const base = 440 + index * 46;
+          this.playTone(base, 'triangle', 0.15, 0, 0.14);
+          this.playTone(base * 1.5, 'sine', 0.28, 0.05, 0.13);
+        }
+      }
+
+      // ファンファーレ
+      playFanfare() {
+        const chord = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
+        chord.forEach((freq, i) => {
+          this.playTone(freq, 'sine', 0.45, i * 0.07, 0.14);
+          this.playTone(freq * 0.5, 'triangle', 0.45, i * 0.07, 0.08);
+        });
+      }
+
+      // 完全共鳴ボーナス音
+      playPerfectResonance() {
+        const notes = [1046.50, 1318.51, 1567.98, 2093.00];
+        notes.forEach((freq, i) => {
+          this.playTone(freq, 'sine', 0.38, i * 0.06, 0.14);
+        });
+      }
+
+      // ラウンド失敗時の不協和音
+      playDiscord() {
+        this.playTone(220, 'sawtooth', 0.25, 0, 0.14);
+        this.playTone(185, 'sawtooth', 0.3, 0.15, 0.14);
+        this.playTone(138.59, 'sawtooth', 0.48, 0.3, 0.15);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /**
+     * ============================================================================
+     * 2. ALCHEMY DATA: 10 LENSES, 12 TABOOS, 90 TOPICS, TEAM TITLES
+     * ============================================================================
+     */
+
+    const ALCHEMIST_PRESET_NAMES = [
+      '賢者ソフィア', '錬金術師レオ', '星詠みルナ', '紅蓮のカイ',
+      '翠玉のミア', '蒼穹のノア', '黄金のアルス', '銀月のセレス',
+      '秘術師ゼノ', '薬草師リリィ', '古文書官ユウ', '天秤のハル'
+    ];
+
+    // 1. 価値観レンズ（全10種・演じ方ヒント付き）
+    const VALUE_LENSES = [
+      {
+        id: 'sage',
+        name: '純粋な賢者レンズ',
+        icon: 'fa-sun',
+        color: 'text-amber-300',
+        badgeClass: 'bg-amber-500/20 border-amber-400/40 text-amber-300',
+        parchmentBadge: 'bg-amber-800/15 border-amber-700/40 text-amber-900',
+        desc: '通常のあなた自身の素直な感覚・価値観で例えてください。',
+        tip: '演じ方ヒント：ひねりなしで自分のリアルな感覚をそのまま例えよう！'
+      },
+      {
+        id: 'kid',
+        name: '小学3年生レンズ',
+        icon: 'fa-child-reaching',
+        color: 'text-sky-300',
+        badgeClass: 'bg-sky-500/20 border-sky-400/40 text-sky-300',
+        parchmentBadge: 'bg-sky-800/15 border-sky-700/40 text-sky-900',
+        desc: '無邪気な小学3年生になったつもりで、お小遣いや学校目線の基準で例える！',
+        tip: '演じ方ヒント：「お小遣い500円」「給食の揚げパン」「夏休みの宿題」など子供目線で！'
+      },
+      {
+        id: 'oyaji',
+        name: '昭和の頑固オヤジレンズ',
+        icon: 'fa-mug-hot',
+        color: 'text-orange-300',
+        badgeClass: 'bg-orange-500/20 border-orange-400/40 text-orange-300',
+        parchmentBadge: 'bg-orange-800/15 border-orange-700/40 text-orange-900',
+        desc: '根性・昔気質・渋さを重んじる昭和の頑固オヤジの基準で例える！',
+        tip: '演じ方ヒント：「最近の若いもんは…」「黙って背中で語る」「晩酌の熱燗」など渋く例えよう！'
+      },
+      {
+        id: 'billionaire',
+        name: '億万長者セレブレンズ',
+        icon: 'fa-crown',
+        color: 'text-yellow-300',
+        badgeClass: 'bg-yellow-500/20 border-yellow-400/40 text-yellow-300',
+        parchmentBadge: 'bg-yellow-800/15 border-yellow-700/40 text-yellow-900',
+        desc: '資産1000億円の桁違いな金銭感覚＆スケール感で例える！',
+        tip: '演じ方ヒント：「自家用ジェット」「油田を1つ買う」「端数の1000万円」などスケールをバグらせよう！'
+      },
+      {
+        id: 'chuuni',
+        name: '闇の厨二病レンズ',
+        icon: 'fa-eye',
+        color: 'text-purple-300',
+        badgeClass: 'bg-purple-500/20 border-purple-400/40 text-purple-300',
+        parchmentBadge: 'bg-purple-800/15 border-purple-700/40 text-purple-900',
+        desc: '中二設定・封印されし魔力・カッコよさ重視の闇の基準で例える！',
+        tip: '演じ方ヒント：「右腕の黒炎竜」「世界の裏の組織」「禁忌の魔導書」など壮大に語ろう！'
+      },
+      {
+        id: 'cat',
+        name: '気まぐれ飼い猫レンズ',
+        icon: 'fa-cat',
+        color: 'text-teal-300',
+        badgeClass: 'bg-teal-500/20 border-teal-400/40 text-teal-300',
+        parchmentBadge: 'bg-teal-800/15 border-teal-700/40 text-teal-900',
+        desc: 'マイペース・快適さ・お昼寝・おやつ重視の猫目線で例える！',
+        tip: '演じ方ヒント：「日向ぼっこ」「ちゅ〜る」「段ボール箱」「飼い主の膝の上」など快適さ基準で！'
+      },
+      {
+        id: 'samurai',
+        name: '戦国武将レンズ',
+        icon: 'fa-khanda',
+        color: 'text-red-300',
+        badgeClass: 'bg-red-500/20 border-red-400/40 text-red-300',
+        parchmentBadge: 'bg-red-800/15 border-red-700/40 text-red-900',
+        desc: '天下統一・武士道・名誉と忠義を重んじる戦国武将の基準で例える！',
+        tip: '演じ方ヒント：「一番槍の功名」「城を落とす」「主君への忠義」など武士らしい例えで！'
+      },
+      {
+        id: 'maiden',
+        name: 'ガチ恋乙女レンズ',
+        icon: 'fa-heart-pulse',
+        color: 'text-pink-300',
+        badgeClass: 'bg-pink-500/20 border-pink-400/40 text-pink-300',
+        parchmentBadge: 'bg-pink-800/15 border-pink-700/40 text-pink-900',
+        desc: 'すべてを恋愛脳・ときめき・ロマンス基準で考える乙女視点で例える！',
+        tip: '演じ方ヒント：「好きな人からの既読」「運命の出会い」「壁ドン」など恋のときめきで例えよう！'
+      },
+      {
+        id: 'ai',
+        name: '効率厨AIレンズ',
+        icon: 'fa-microchip',
+        color: 'text-cyan-300',
+        badgeClass: 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300',
+        parchmentBadge: 'bg-cyan-800/15 border-cyan-700/40 text-cyan-900',
+        desc: 'コスパ・タイパ・合理性とデータ最優先の冷徹AI基準で例える！',
+        tip: '演じ方ヒント：「処理速度0.01秒」「完全栄養食」「無駄の削減率99%」など合理性で例えよう！'
+      },
+      {
+        id: 'worker',
+        name: '限界社畜レンズ',
+        icon: 'fa-battery-quarter',
+        color: 'text-indigo-300',
+        badgeClass: 'bg-indigo-500/20 border-indigo-400/40 text-indigo-300',
+        parchmentBadge: 'bg-indigo-800/15 border-indigo-700/40 text-indigo-900',
+        desc: '日々の疲労・有給休暇・金曜の夜への渇望を基準に例える！',
+        tip: '演じ方ヒント：「金曜21時の解放感」「月曜朝の絶望」「栄養ドリンク」など労働者の魂で例えよう！'
+      }
+    ];
+
+    // 2. 禁句（タブー）縛り（全12種）
+    const TABOO_RULES = [
+      { id: 'no_katakana', title: 'カタカナ語禁止！', desc: '例えワードや説明でカタカナ言葉を使ったら即アウト！和語・漢字のみで表現！' },
+      { id: 'one_noun', title: '名詞1単語のみで表現！', desc: '文章や形容詞は禁止！「〇〇」という短い名詞1単語だけで勝負！' },
+      { id: 'onomatopoeia', title: '擬音語・擬態語を必ず入れる！', desc: '「ワクワク」「ズドン」「ふわっ」などオノマトペを必ず交えて表現！' },
+      { id: 'no_numbers_money', title: '数字や金額の直接表現禁止！', desc: '「100円」「3倍」「億」など具体的な数字・金額の表現は一切NG！' },
+      { id: 'under_20_chars', title: '20文字以内で表現！', desc: 'ダラダラ説明するのは禁止！短いフレーズ一撃でニュアンスを伝えよう！' },
+      { id: 'no_food', title: '食べ物の例え禁止！', desc: '料理・お菓子・飲み物など食べ物に関するワードは一切使用禁止！' },
+      { id: 'nature_only', title: '「自然・生き物・天気」で例える！', desc: '動物・植物・天候・自然現象のどれかに置き換えて表現しよう！' },
+      { id: 'school_only', title: '「学校生活・学生時代」で例える！', desc: '授業・テスト・部活・給食など学校にまつわる出来事だけで例えよう！' },
+      { id: 'rpg_only', title: '「RPG・冒険の世界」で例える！', desc: 'スライム・伝説の剣・ラスボス・回復魔法など冒険者目線で表現！' },
+      { id: 'no_proper_nouns', title: '固有名詞（作品名・人名・店名）禁止！', desc: '特定のアニメ・芸能人・ブランド名を出さずに一般表現だけで伝えよう！' },
+      { id: 'past_exp', title: '「自分の実体験」のみで語る！', desc: '架空の例えではなく、自分が過去に本当に体験した出来事だけで例える！' },
+      { id: 'question_style', title: '疑問形（「〜な時？」）で発表！', desc: '言い切り禁止！「〇〇した時くらいの感じ？」と問いかける口調で発表！' }
+    ];
+
+    // 3. 厳選お題データベース（5カテゴリー × 18問 ＝ 全90問）
+    const TOPIC_CATEGORIES = {
+      daily: {
+        id: 'daily',
+        name: '定番・日常',
+        icon: 'fa-sun',
+        color: 'bg-amber-500',
+        topics: [
+          { title: '日常に潜む「地味な絶望」の深さ', min: '靴下に小さな穴が空いていた', max: '全データ保存前にPCが強制終了' },
+          { title: '人生の「小さな幸せ」の尊さ', min: '自販機で10円玉を拾った', max: '二度寝しようとしたらまだ朝5時だった' },
+          { title: '月曜日の朝に起きるためのモチベーション', min: '絶望・布団から1ミリも動けない', max: '遠足当日の小学生レベルで飛び起きる' },
+          { title: '部屋にあると「生活レベルが上がった」と錯覚するもの', min: '100均のプラスチックコップ', max: '全自動エスプレッソマシン＆間接照明' },
+          { title: '他人から言われて「3日間はニヤける」褒め言葉', min: '「今日服のセンスいいね」', max: '「あなたといると人生が楽しくなる」' },
+          { title: 'お風呂上がりにやってしまう背徳の習慣', min: '冷たい麦茶を一気飲み', max: '深夜2時に背脂ラーメン＆アイス' },
+          { title: '旅行の荷造りで「絶対忘れちゃダメ」な重要度', min: '現地で買える歯ブラシ', max: 'パスポート・財布・スマホ充電器' },
+          { title: '雨の日に外出しなくて済む時の優越感', min: 'ちょっとラッキー程度', max: '窓の外を眺めながらコーヒーを飲む王様気分' },
+          { title: '「大人になったな…」と実感する渋い瞬間', min: 'ブラックコーヒーが飲めた', max: '休日にホームセンターの木材コーナーで2時間悩む' },
+          { title: 'コンビニで「ついカゴに入れてしまう」誘惑の強さ', min: 'レジ横のチロルチョコ', max: '新作プレミアムスイーツ＆ホットスナック全種' },
+          { title: 'スマホの充電残量と心のピンチ度', min: '99%（余裕の無敵状態）', max: '1%・モバイルバッテリーなし・道に迷い中' },
+          { title: '睡眠の質が爆上がりするナイトルーティン', min: 'スマホを寝る直前まで見る', max: '高級ホテルのシーツ＋アロマ＋入浴剤' },
+          { title: '学校・職場で「ヒーローになれる」神行動', min: '消しゴムを貸してあげる', max: '全員分の差し入れ＋神フォローで定時退社' },
+          { title: '子どもの頃に信じていた「可愛い勘違い」', min: 'スイカの種を飲むとお腹から芽が出る', max: '自分は選ばれた勇者で特殊能力が眠っている' },
+          { title: '「一生に一度はやってみたい」贅沢体験', min: '回らないお寿司屋さんで時価を頼む', max: '豪華客船で世界一周ファーストクラス' },
+          { title: 'ネットショッピングで「ポチる」時の迷い度', min: '300円の消耗品（即決）', max: '30万円の最新ガジェット・高級家電' },
+          { title: 'Wi-Fiが繋がらない時の「ストレス指数」', min: '本を読めばいいから余裕', max: 'オンラインゲームのランク戦中・動画のクライマックス' },
+          { title: '「時間があっという間に溶ける」ブラックホール度', min: '歯医者の待合室の3分', max: '休日の昼寝・ボードゲーム・推し語り' }
+        ]
+      },
+      love: {
+        id: 'love',
+        name: '恋愛・人間関係',
+        icon: 'fa-heart',
+        color: 'bg-pink-500',
+        topics: [
+          { title: '異性の「無意識の仕草」へのキュン度', min: '特に何も感じない', max: '心臓が撃ち抜かれて恋に落ちる' },
+          { title: '「この人、絶対自分のこと好きでしょ！」と確信するサイン', min: '挨拶を返してくれた', max: '毎日深夜に電話＆将来の話を振ってくる' },
+          { title: '初デートで連れて行かれたら「センス最高！」と思う場所', min: '近所のチェーン店・散歩のみ', max: '夜景の見える隠れ家レストラン＆水族館' },
+          { title: '恋愛において「これだけは絶対譲れない」重要条件', min: '趣味や好きな音楽の一致', max: '金銭感覚・誠実さ・思いやり' },
+          { title: '恋人や友達にされたら「一瞬で冷める」NG行動', min: '返信が半日遅れる', max: '店員さんに横柄な態度＆平気で嘘をつく' },
+          { title: '記念日・誕生日のサプライズ嬉しさレベル', min: 'LINEで「おめでとう」スタンプのみ', max: '手書きの手紙＋ずっと欲しかったプレゼント' },
+          { title: '「親友と呼べるライン」の信頼度', min: 'たまにSNSでいいねし合う', max: '夜中3時に「助けて」と電話できる関係' },
+          { title: '理想のプロポーズ・告白のドラマチック度', min: '部屋でテレビを見ながらさらっと', max: '満天の星空の下で指輪パカッ' },
+          { title: '友達とケンカした時の「仲直りのしやすさ」', min: 'お互い意地を張って半年口をきかない', max: '「ごめん、アイス奢るわ」で5分で笑顔' },
+          { title: '異性のファッション・見た目でグッとくるポイント', min: '清潔感があれば何でもOK', max: '自分好みの完璧なコーディネート＆香り' },
+          { title: 'パートナーからの連絡頻度の理想', min: '週に1回生存確認できればOK', max: '朝昼晩の報告＋寝落ち通話が毎日' },
+          { title: '「脈ナシだな…」と悟る切ない瞬間', min: '返信がちょっと短い', max: '「いい人紹介しようか？」と言われた' },
+          { title: '恋人と同棲・結婚したら「揉めそうな」生活習慣', min: '歯磨き粉の絞り方', max: 'お金の使い方・家事分担・休日の過ごし方' },
+          { title: '人として「この人器が大きいな〜」と尊敬する瞬間', min: '遅刻を笑って許してくれた', max: '自分のミスを黙ってカバーして手柄を譲る' },
+          { title: '恋愛映画・漫画の「王道シチュエーション」憧れ度', min: 'ベタすぎてちょっと恥ずかしい', max: '人生で一度は絶対に体験したい！' },
+          { title: 'LINE・メッセージの「既読スルー」気になり度', min: '1週間返ってこなくても全く平気', max: '5分返ってこないだけでスマホを凝視する' },
+          { title: '初対面の人の「第一印象」で一番見てしまうポイント', min: '靴や持ち物のブランド', max: '笑顔の自然さ・話し方・清潔感' },
+          { title: '「この人とずっと一緒にいたい」と確信する瞬間', min: '趣味の話がちょっと合った時', max: '無言で同じ空間にいても最高に心地いい時' }
+        ]
+      },
+      food: {
+        id: 'food',
+        name: '食べ物・グルメ',
+        icon: 'fa-utensils',
+        color: 'bg-orange-500',
+        topics: [
+          { title: 'おにぎりの具材「王道＆満足度」ランキング', min: '塩むすび（具なし）', max: 'いくら・鮭ハラス・焼きたらこの豪華共演' },
+          { title: '焼肉屋で「最初に網に乗せるべき」主役メニュー', min: 'シメの冷麺・ビビンバ', max: '特上厚切りタン塩＆特選カルビ' },
+          { title: 'ラーメンのトッピング「背徳感＆幸福度」', min: '素ラーメン（具なし）', max: 'チャーシュー5枚＋味玉＋ニンニク＋背脂マシ' },
+          { title: '回転寿司で「これだけは絶対外せない」神ネタ', min: 'かっぱ巻き・おしんこ巻き', max: '大トロ・炙りサーモン・うに軍艦' },
+          { title: '「最後の晩餐」に選ぶとしたらの本気度', min: 'いつものコンビニ弁当', max: '人生最高の思い出が詰まった究極の料理' },
+          { title: 'カレーの隠し味・トッピングの「相性抜群度」', min: 'ちょっと冒険しすぎな謎アレンジ', max: 'とろけるチーズ＋ロースカツ＋半熟卵' },
+          { title: '真夏の炎天下で飲みたい・食べたいものの「生き返り度」', min: '熱々の鍋焼きうどん', max: 'キンキンに冷えたビール＆かき氷' },
+          { title: 'お弁当箱のフタを開けた時の「ガッツポーズ度」', min: '白米に梅干し1個のみ', max: '唐揚げ＋卵焼き＋ウインナー＋ハンバーグ' },
+          { title: 'お祭りの屋台で「つい買ってしまう」魅力度', min: 'スーパーでも買えるペットボトル茶', max: '焼きたてイカ焼き＋チョコバナナ＋かき氷' },
+          { title: 'パンに塗る・挟む「最強の相棒」', min: '何もつけずにそのまま', max: '厚切りバター＋あんこ＋ホイップクリーム' },
+          { title: '居酒屋で乾杯と同時に頼む「鉄板おつまみ」', min: 'デザート・お茶漬け', max: '枝豆＋ポテトフライ＋鶏の唐揚げ' },
+          { title: '冬に食べたいあったか鍋の「テンション爆上がり具材」', min: 'かさ増し用のモヤシのみ', max: 'ズワイガニ・黒毛和牛・ぷりぷりモツ' },
+          { title: 'コンビニスイーツの「専門店超え」衝撃度', min: '昔からある駄菓子系', max: '数量限定プレミアム生クリームスイーツ' },
+          { title: '小学校の給食で「おかわり争奪戦」になった人気メニュー', min: '正直みんな残しがちだったメニュー', max: '揚げパン・カレー・冷凍みかん' },
+          { title: 'カフェで頼むドリンク・フードの「ご褒美感」', min: '水道水・一番小さいブラックコーヒー', max: '季節限定フラペチーノ＋濃厚チーズケーキ' },
+          { title: '深夜2時に食べたら「翌朝後悔するけど最高」な夜食', min: 'ホットミルク・ヨーグルト', max: 'カップ焼きそば大盛り＋マヨネーズ＋おにぎり' },
+          { title: 'バイキング・ビュッフェで「真っ先に皿に盛る」主役', min: 'グリーンサラダ・白ご飯', max: 'ローストビーフ・お寿司・豪華デザート' },
+          { title: '「料理ができる人だな！」と尊敬する手料理レベル', min: '目玉焼き・インスタントラーメン', max: 'ビーフシチュー・角煮・出汁巻き卵' }
+        ]
+      },
+      fantasy: {
+        id: 'fantasy',
+        name: 'もしも・ファンタジー',
+        icon: 'fa-wand-magic-sparkles',
+        color: 'bg-purple-500',
+        topics: [
+          { title: '1つだけ手に入る「超能力」の実用性＆ロマン度', min: '爪を好きな長さに一瞬で伸ばせる', max: '時間停止＆テレポート＆記憶操作' },
+          { title: '無人島に1つだけ持っていけるアイテムの生存率', min: '穴の空いたバケツ', max: '衛星電話付きの万能サバイバルキット' },
+          { title: '宝くじで「10億円」当たった時の使い道の豪快さ', min: '全額定期預金して今まで通り働く', max: 'プライベートジェット購入＆島を一つ買う' },
+          { title: 'タイムマシンで行きたい時代のロマン度', min: '昨日のお昼ご飯を食べ直す', max: '恐竜時代 or 1000年後の未来都市' },
+          { title: '異世界転生した時に欲しい「チートスキル」の強さ', min: '薬草を1%だけよく見つけられる', max: '全属性魔法無効＆魔王をワンパン' },
+          { title: 'ゾンビパンデミック発生時の「生存率が高い」拠点', min: 'ガラス張りのコンビニ', max: '自家発電・食料完備の地下シェルター' },
+          { title: '動物と話せるようになったら「真っ先に聞きたい」相手', min: '道端のアリ', max: '深海魚・クジラ・野生のライオン' },
+          { title: '1日だけ透明人間になれたらやってみたいこと', min: '特に何もせず家で寝る', max: '世界中の秘密基地やVIPルームに潜入' },
+          { title: 'ドラえもんのひみつ道具で「人生が変わる」レベル', min: 'ころばし屋', max: 'もしもボックス・どこでもドア' },
+          { title: 'RPGのパーティメンバーに入れたい「頼もしさ」', min: 'すぐ逃げる村人A', max: '攻撃・回復・魔法すべてカンストの賢者' },
+          { title: '悪の組織の秘密基地にあったら「テンション上がる」設備', min: '普通のパイプ椅子とホワイトボード', max: '巨大ロボット発射ゲート＆レーザー防衛網' },
+          { title: '宇宙人に地球代表として見せる「人類の傑作」', min: '使い捨ての割り箸', max: '交響曲・ロケット・完璧なフルコース料理' },
+          { title: '魔法のランプに「3つ願いを叶えてもらう」スケール感', min: '肩こりを治してほしい', max: '世界平和＋不老不死＋無限の富' },
+          { title: '生まれ変わるならなってみたい生き物・存在', min: '寿命1週間のセミ', max: '大空を自由に飛ぶワシ or 愛され飼い猫' },
+          { title: '歴史上の偉人で「友達になって飲みに行きたい」度', min: '厳格すぎて会話が続かなそう', max: '絶対に話が面白くて朝まで盛り上がれる' },
+          { title: '「強そう」と本能的に感じる響き・存在', min: 'ひよこ・綿毛・スライム', max: 'ブラックホール・深淵の竜・確定申告' },
+          { title: '魔法使いの弟子になったら「最初に覚えたい」魔法', min: '靴ひもを自動で結ぶ魔法', max: '空を自由に飛ぶ魔法・瞬間移動' },
+          { title: '古代遺跡の宝箱から出てきたら「大当たり！」な秘宝', min: 'ただの錆びたスプーン', max: '不老不死の霊薬・伝説の王冠' }
+        ]
+      },
+      deep: {
+        id: 'deep',
+        name: '大人・深い価値観',
+        icon: 'fa-scale-balanced',
+        color: 'bg-indigo-600',
+        topics: [
+          { title: '「お金では買えない価値」の重み', min: '道端で拾った綺麗な石', max: 'かけがえのない親友・青春の記憶・命' },
+          { title: '人類が「まだ解明できていない謎」のロマン度', min: '片方だけ消える靴下の行方', max: '宇宙の果て・意識の正体・深海の未知生物' },
+          { title: '「カッコいい大人の条件」の渋さ', min: 'コーヒーに砂糖を入れない', max: '見返りを求めず静かに去っていく背中' },
+          { title: '人生の「ラスボス」にふさわしい試練', min: '朝布団から出ること', max: '自分の弱さと向き合い夢を叶えること' },
+          { title: '「幸せの定義」としてしっくりくる度合い', min: '特に何も起きない平凡な1日', max: '愛する人たちと笑い合いながら美味しいご飯を食べる' },
+          { title: '「センスがいい」と唸ってしまう表現・行動', min: '無難なテンプレート通りの挨拶', max: '相手の心を一瞬で掴むユーモアと気遣い' },
+          { title: 'もし地球最後の日に「1曲だけ聴く」ならの壮大さ', min: 'スーパーの呼び込みBGM', max: '人生の走馬灯が蘇る魂の名曲' },
+          { title: '「勇気が必要」な一歩のハードルの高さ', min: '美容室で「もう少し切ってください」と言う', max: '安定した環境を捨てて未知の世界へ飛び込む' },
+          { title: '「名前負けしていない」圧倒的スケール感', min: '名前だけ立派な小さな公園', max: 'ナイアガラの滝・ピラミッド・万里の長城' },
+          { title: '人生で「一番大切な感情」', min: 'ちょっとした退屈', max: '愛・感謝・ワクワクする好奇心' },
+          { title: '「天才と紙一重」な狂気・こだわりレベル', min: '鉛筆の削り方にちょっとこだわる', max: '寝食を忘れて一つの研究に一生を捧げる' },
+          { title: '「美しい」と心が震える光景', min: '綺麗に整頓された本棚', max: '夜明けの水平線・満天の天の川・全力の涙' },
+          { title: 'この世で「一番信用できるもの」', min: '占いアプリのラッキーアイテム', max: '自分の努力・重力・親友との約束' },
+          { title: '仕事や勉強で「一番モチベーションが上がる」報酬', min: '形式的なお礼メール', max: '心からの感謝＋目に見える成果と評価' },
+          { title: '「人生の転機」になり得る出来事のインパクト', min: 'いつもと違う道で帰った', max: '一生モノの師匠・パートナーとの運命の出会い' },
+          { title: '10年後の自分に「これだけは達成していてほしい」目標', min: '部屋の片付けが習慣になっている', max: '大切な人たちを守りながら夢を実現している' },
+          { title: '「知性・教養があるな」と感じる人の特徴', min: '難しい横文字をたくさん使う', max: '複雑な話を誰にでも分かりやすく優しく説明できる' },
+          { title: '人生の最期に「最高の人生だった！」と思える条件', min: '貯金通帳の残高が多いこと', max: '後悔なく挑戦し、愛し愛された記憶があること' }
+        ]
+      }
+    };
+
+    // 4. 錬金術師チーム称号（12種）
+    const TEAM_TITLES = [
+      { minSynchro: 98, requirePerfectAll: true, title: '奇跡の共鳴を起こす双子の魂', desc: '全ラウンド完全成功＆驚異のシンクロ率！もはや思考が完全に一体化しています。', icon: 'fa-crown', color: 'text-amber-300' },
+      { minSynchro: 94, requirePerfectAll: false, title: '阿吽の呼吸を極めし賢者たち', desc: 'わずかな言葉のニュアンスから相手の視点と数字を完璧に見抜く伝説の錬金術師団！', icon: 'fa-wand-sparkles', color: 'text-emerald-300' },
+      { minSynchro: 88, requirePerfectAll: false, title: '黄金律を紡ぐ星詠みアルケミスト', desc: 'お互いの価値観の違いを美しく調和させ、見事な黄金比を調合した精鋭チーム！', icon: 'fa-star', color: 'text-amber-300' },
+      { minSynchro: 80, requirePerfectAll: false, title: '以心伝心の銀翼ギルド', desc: '高い洞察力とチームワークで、価値観レンズの罠すら鮮やかに突破しました！', icon: 'fa-feather-pointed', color: 'text-cyan-300' },
+      { minSynchro: 72, requirePerfectAll: false, title: '真理を探求する魔導書研究団', desc: '議論の深さと推理力が光る知性派チーム！あと一歩で伝説の領域に到達します。', icon: 'fa-book-sparkles', color: 'text-purple-300' },
+      { minSynchro: 64, requirePerfectAll: false, title: '絶妙なるバランスの調合師たち', desc: '個性豊かな価値観を持ち寄りながら、見事に大崩れせず調和を保ったバランス型チーム！', icon: 'fa-scale-balanced', color: 'text-teal-300' },
+      { minSynchro: 55, requirePerfectAll: false, title: '笑いと驚きの実験室メンバー', desc: '予想外の価値観のズレすら爆笑に変えてしまう、エンターテイナー気質の錬金術師たち！', icon: 'fa-flask', color: 'text-orange-300' },
+      { minSynchro: 45, requirePerfectAll: false, title: '波乱万丈の迷宮チャレンジャー', desc: '「えっ、それがその数字！？」という名場面を連発！価値観の奥深さを体現しました。', icon: 'fa-compass', color: 'text-sky-300' },
+      { minSynchro: 35, requirePerfectAll: false, title: '自由奔放な異端アルケミスト', desc: '常識や世間の基準にとらわれない、唯一無二のマイペース集団！個性爆発です！', icon: 'fa-fire', color: 'text-pink-300' },
+      { minSynchro: 25, requirePerfectAll: false, title: 'カオスを愛する異次元錬金術師団', desc: 'もはや誰にも予測不能！常識を覆すカオスな調合で場を一気に盛り上げました！', icon: 'fa-hurricane', color: 'text-rose-300' },
+      { minSynchro: 0, requirePerfectAll: false, title: '伝説の逆転大爆発・錬金術師団', desc: '数字が逆転すればするほど笑いが起きる！ある意味で奇跡的なすれ違いを達成しました！', icon: 'fa-bomb', color: 'text-rose-400' }
+    ];
+
+    const PLAYER_PALETTE = [
+      { bg: 'bg-rose-500', text: 'text-rose-400', border: 'border-rose-500/50', badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30' },
+      { bg: 'bg-sky-500', text: 'text-sky-400', border: 'border-sky-500/50', badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30' },
+      { bg: 'bg-amber-500', text: 'text-amber-400', border: 'border-amber-500/50', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30' },
+      { bg: 'bg-emerald-500', text: 'text-emerald-400', border: 'border-emerald-500/50', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+      { bg: 'bg-purple-500', text: 'text-purple-400', border: 'border-purple-500/50', badge: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
+      { bg: 'bg-cyan-500', text: 'text-cyan-400', border: 'border-cyan-500/50', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' },
+      { bg: 'bg-pink-500', text: 'text-pink-400', border: 'border-pink-500/50', badge: 'bg-pink-500/20 text-pink-300 border-pink-500/30' },
+      { bg: 'bg-orange-500', text: 'text-orange-400', border: 'border-orange-500/50', badge: 'bg-orange-500/20 text-orange-300 border-orange-500/30' }
+    ];
+
+    /**
+     * ============================================================================
+     * 3. MAIN APPLICATION CONTROLLER
+     * ============================================================================
+     */
+    const app = {
+      state: {
+        phase: 'setup', // 'setup' | 'deal' | 'discuss' | 'reveal' | 'final'
+        playerCount: 4,
+        playerNames: ['賢者ソフィア', '錬金術師レオ', '星詠みルナ', '紅蓮のカイ', '翠玉のミア', '蒼穹のノア', '黄金のアルス', '銀月のセレス'],
+        selectedCategory: 'all',
+        customTopic: { title: '', min: '1：弱い / 少ない', max: '100：最強 / 最高' },
+
+        // Game Options
+        totalRounds: 3, // 1 | 3 | 5
+        enableLensMode: true,
+        enableTabooMode: true,
+        enableScaleCrystal: true,
+
+        // Campaign State
+        currentRound: 1,
+        totalScore: 0,
+        roundHistory: [], // { round, topicTitle, success, resonanceHit, resonancePairNames, resonanceDiff, synchroRate, points }
+        usedTopicTitles: [],
+
+        // Current Round State
+        currentTopic: null,
+        currentTaboo: null,
+        players: [], // { id, name, colorIdx, number, lens, hint }
+        dealIndex: 0,
+        isSecretRevealed: false,
+
+        // Discussion Mechanics
+        resonanceLinkIdx: null, // i means pair (i, i+1)
+        crystalUsed: false,
+        crystalResult: null, // { leftName, rightName, isAscending }
+
+        // Reveal State
+        revealStep: 0,
+        isRevealing: false,
+        revealTimers: [],
+        revealResult: null, // { success, mistakeIndices, resonanceHit, resonanceDiff, resonancePairNames, synchroRate, roundPoints }
+        draggedIdx: null
+      },
+
+      init() {
+        this.render();
+      },
+
+      escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      },
+
+      showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const styles = {
+          info: 'bg-alch-panel text-white border-indigo-400/40',
+          success: 'bg-emerald-950/95 text-emerald-100 border-emerald-400/50',
+          warn: 'bg-amber-950/95 text-amber-100 border-amber-400/60',
+          error: 'bg-rose-950/95 text-rose-100 border-rose-400/60'
+        };
+        const icons = {
+          info: 'fa-sparkles text-amber-300',
+          success: 'fa-circle-check text-emerald-300',
+          warn: 'fa-triangle-exclamation text-amber-300',
+          error: 'fa-circle-xmark text-rose-300'
+        };
+
+        toast.className = `${styles[type] || styles.info} border px-4 py-2.5 rounded-2xl shadow-2xl font-bold text-xs sm:text-sm flex items-center gap-2.5 animate-pop-in pointer-events-auto backdrop-blur-md`;
+        toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${this.escapeHtml(message)}</span>`;
+
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(8px)';
+          toast.style.transition = 'all 0.25s ease';
+          setTimeout(() => toast.remove(), 260);
+        }, 2600);
+      },
+
+      openModal(htmlContent) {
+        const overlay = document.getElementById('modal-overlay');
+        const box = document.getElementById('modal-box');
+        box.innerHTML = htmlContent;
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+      },
+
+      closeModal() {
+        sound.playTap();
+        const overlay = document.getElementById('modal-overlay');
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+      },
+
+      openRulesModal() {
+        sound.playTap();
+        this.openModal(`
+          <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+            <h2 class="text-lg sm:text-xl font-black text-amber-300 flex items-center gap-2">
+              <i class="fa-solid fa-book-open"></i> 錬金術師の魔導書（遊び方）
+            </h2>
+            <button onclick="app.closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed">
+            <div class="p-3.5 rounded-2xl bg-alch-panel border border-amber-500/35">
+              <p class="font-black text-amber-300 mb-1"><i class="fa-solid fa-flask mr-1.5"></i>基本ルール：1 → 100 の昇順調合</p>
+              <p class="text-xs text-slate-300">全員に<strong>1〜100の秘密の数字</strong>が配られます。数字そのものは言わずに、お題に沿った「例えワード」を出し合い、左（1位）から右（最下位）へ<strong>小さい順</strong>に並べましょう！</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div class="p-3 rounded-2xl bg-indigo-950/70 border border-purple-400/30">
+                <div class="font-black text-purple-300 mb-1"><i class="fa-solid fa-glasses mr-1"></i>① 価値観レンズ（全10種）</div>
+                <p class="text-slate-300">秘密の視点ロール（小学3年生・頑固オヤジ・億万長者など）が付与！誰がどの視点で例えているか推理しよう。</p>
+              </div>
+              <div class="p-3 rounded-2xl bg-indigo-950/70 border border-amber-400/30">
+                <div class="font-black text-amber-300 mb-1"><i class="fa-solid fa-link mr-1"></i>② 共鳴リンク（ペア予想）</div>
+                <p class="text-slate-300">隣接する「数字の差が10以内！」と予想するペアを1組リンク！昇順＆差10以内なら<strong>完全共鳴ボーナス</strong>！</p>
+              </div>
+              <div class="p-3 rounded-2xl bg-indigo-950/70 border border-cyan-400/30">
+                <div class="font-black text-cyan-300 mb-1"><i class="fa-solid fa-scale-balanced mr-1"></i>③ 真実の天秤（1回限り）</div>
+                <p class="text-slate-300">2枚を選んで天秤にかけると、「左＜右」で正しいか逆転しているかだけを判定してくれます。</p>
+              </div>
+              <div class="p-3 rounded-2xl bg-indigo-950/70 border border-rose-400/30">
+                <div class="font-black text-rose-300 mb-1"><i class="fa-solid fa-ban mr-1"></i>④ 禁句（タブー）縛り</div>
+                <p class="text-slate-300">ラウンドごとに「カタカナ禁止」「名詞1単語のみ」などの表現制限が課せられ、白熱度が倍増します！</p>
+              </div>
+            </div>
+          </div>
+          <button onclick="app.closeModal()" class="mt-5 w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">
+            閉じる
+          </button>
+        `);
+      },
+
+      confirmResetHome() {
+        if (this.state.phase === 'setup') return;
+        sound.playTap();
+        this.openModal(`
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-400/40 text-rose-400 flex items-center justify-center text-2xl mx-auto mb-3">
+              <i class="fa-solid fa-door-open"></i>
+            </div>
+            <h3 class="text-lg font-black text-white mb-2">儀式を中断して設定画面へ戻りますか？</h3>
+            <p class="text-xs text-slate-300 mb-6">現在のラウンド進行状況とスコアはリセットされます。</p>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="app.closeModal()" class="py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold transition">
+                儀式を続ける
+              </button>
+              <button onclick="app.resetToSetup()" class="py-3 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-black shadow-btn-3d btn-tactile">
+                設定画面へ戻る
+              </button>
+            </div>
+          </div>
+        `);
+      },
+
+      resetToSetup() {
+        this.clearRevealTimers();
+        this.closeModal();
+        this.state.phase = 'setup';
+        this.render();
+      },
+
+      // Setup Screen Actions
+      setPlayerCount(count) {
+        sound.playTap();
+        this.state.playerCount = count;
+        this.render();
+      },
+
+      updatePlayerName(idx, val) {
+        this.state.playerNames[idx] = val;
+      },
+
+      shufflePlayerNames() {
+        sound.playSwap();
+        const pool = [...ALCHEMIST_PRESET_NAMES];
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        for (let i = 0; i < 8; i++) {
+          this.state.playerNames[i] = pool[i % pool.length];
+        }
+        this.showToast('錬金術師名をシャッフルしました！', 'info');
+        this.render();
+      },
+
+      resetPlayerNames() {
+        sound.playTap();
+        for (let i = 0; i < 8; i++) {
+          this.state.playerNames[i] = ALCHEMIST_PRESET_NAMES[i] || `錬金術師${i + 1}`;
+        }
+        this.showToast('デフォルトの呼び名にリセットしました', 'info');
+        this.render();
+      },
+
+      setTotalRounds(rounds) {
+        sound.playTap();
+        this.state.totalRounds = rounds;
+        this.render();
+      },
+
+      setCategory(catKey) {
+        sound.playTap();
+        this.state.selectedCategory = catKey;
+        this.render();
+      },
+
+      updateCustomTopicField(field, val) {
+        this.state.customTopic[field] = val;
+      },
+
+      toggleOption(optionKey) {
+        sound.playCrystalChime();
+        this.state[optionKey] = !this.state[optionKey];
+        this.render();
+      },
+
+      // Topic & Taboo Generators
+      pickTopic(categoryKey) {
+        if (categoryKey === 'custom') {
+          const title = this.state.customTopic.title.trim() || '好きなものの度合い';
+          const min = this.state.customTopic.min.trim() || '1：弱い / 少ない';
+          const max = this.state.customTopic.max.trim() || '100：最強 / 最高';
+          return { title, min, max, categoryName: 'カスタム調合題', categoryIcon: 'fa-pen-nib', categoryColor: 'bg-amber-600' };
+        }
+
+        let pool = [];
+        if (categoryKey === 'all') {
+          Object.values(TOPIC_CATEGORIES).forEach(cat => {
+            cat.topics.forEach(t => {
+              pool.push({ ...t, categoryName: cat.name, categoryIcon: cat.icon, categoryColor: cat.color });
+            });
+          });
+        } else {
+          const cat = TOPIC_CATEGORIES[categoryKey] || TOPIC_CATEGORIES.daily;
+          pool = cat.topics.map(t => ({ ...t, categoryName: cat.name, categoryIcon: cat.icon, categoryColor: cat.color }));
+        }
+
+        let available = pool.filter(t => !this.state.usedTopicTitles.includes(t.title));
+        if (available.length === 0) {
+          this.state.usedTopicTitles = [];
+          available = pool;
+        }
+
+        const chosen = available[Math.floor(Math.random() * available.length)];
+        this.state.usedTopicTitles.push(chosen.title);
+        return chosen;
+      },
+
+      pickRandomTaboo() {
+        if (!this.state.enableTabooMode) return null;
+        return TABOO_RULES[Math.floor(Math.random() * TABOO_RULES.length)];
+      },
+
+      shuffleTopicAndTaboo() {
+        sound.playSwap();
+        if (this.state.selectedCategory === 'custom') {
+          this.openCustomTopicModal();
+          return;
+        }
+        this.state.currentTopic = this.pickTopic(this.state.selectedCategory);
+        if (this.state.enableTabooMode) {
+          this.state.currentTaboo = this.pickRandomTaboo();
+        }
+        this.showToast('新しいテーマを召喚しました！', 'info');
+        this.render();
+      },
+
+      openCustomTopicModal() {
+        sound.playTap();
+        this.openModal(`
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-black text-amber-300 flex items-center gap-2">
+              <i class="fa-solid fa-pen-nib"></i>カスタム調合題を作成
+            </h3>
+            <button onclick="app.closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="space-y-4 text-sm">
+            <div>
+              <label class="block font-bold text-slate-300 mb-1">お題タイトル <span class="text-rose-400">*</span></label>
+              <input id="modal-custom-title" type="text" value="${this.escapeHtml(this.state.customTopic.title)}" placeholder="例：学生時代の黒歴史レベル" class="w-full px-3.5 py-2.5 rounded-xl bg-alch-bg border border-amber-500/40 text-white focus:border-amber-400 focus:outline-none font-bold">
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-300 mb-1">1 の基準（最小）</label>
+                <input id="modal-custom-min" type="text" value="${this.escapeHtml(this.state.customTopic.min)}" placeholder="例：可愛い言い間違い" class="w-full px-3 py-2 rounded-xl bg-alch-bg border border-sky-500/40 text-white focus:border-sky-400 focus:outline-none text-xs font-bold">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-300 mb-1">100 の基準（最大）</label>
+                <input id="modal-custom-max" type="text" value="${this.escapeHtml(this.state.customTopic.max)}" placeholder="例：思い出すと叫び出す" class="w-full px-3 py-2 rounded-xl bg-alch-bg border border-rose-500/40 text-white focus:border-rose-400 focus:outline-none text-xs font-bold">
+              </div>
+            </div>
+          </div>
+          <div class="mt-6 flex gap-3">
+            <button onclick="app.closeModal()" class="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold">キャンセル</button>
+            <button onclick="app.saveCustomTopicFromModal()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">決定する</button>
+          </div>
+        `);
+      },
+
+      saveCustomTopicFromModal() {
+        const titleInput = document.getElementById('modal-custom-title').value.trim();
+        const minInput = document.getElementById('modal-custom-min').value.trim();
+        const maxInput = document.getElementById('modal-custom-max').value.trim();
+
+        if (!titleInput) {
+          this.showToast('お題タイトルを入力してください', 'warn');
+          return;
+        }
+        this.state.customTopic = {
+          title: titleInput,
+          min: minInput || '1：弱い / 少ない',
+          max: maxInput || '100：最強 / 最高'
+        };
+        this.state.selectedCategory = 'custom';
+        if (this.state.phase !== 'setup') {
+          this.state.currentTopic = this.pickTopic('custom');
+        }
+        this.closeModal();
+        this.showToast('カスタムお題を設定しました！', 'success');
+        this.render();
+      },
+
+      // Deal Unique Numbers (1-100) & Value Lenses
+      dealNumbersAndLenses(count) {
+        const numPool = Array.from({ length: 100 }, (_, i) => i + 1);
+        for (let i = numPool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [numPool[i], numPool[j]] = [numPool[j], numPool[i]];
+        }
+        const numbers = numPool.slice(0, count);
+
+        let lenses = [];
+        if (!this.state.enableLensMode) {
+          lenses = Array.from({ length: count }, () => VALUE_LENSES[0]);
+        } else {
+          // Ensure at least 1 'sage' (normal) lens and unique special lenses
+          const specialPool = [...VALUE_LENSES.slice(1)];
+          for (let i = specialPool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [specialPool[i], specialPool[j]] = [specialPool[j], specialPool[i]];
+          }
+          const rawLenses = [VALUE_LENSES[0], ...specialPool.slice(0, count - 1)];
+          for (let i = rawLenses.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rawLenses[i], rawLenses[j]] = [rawLenses[j], rawLenses[i]];
+          }
+          lenses = rawLenses;
+        }
+
+        return { numbers, lenses };
+      },
+
+      // Start Campaign
+      startGame() {
+        sound.init();
+        sound.playFanfare();
+
+        if (this.state.selectedCategory === 'custom' && !this.state.customTopic.title.trim()) {
+          this.showToast('カスタムお題を入力してください', 'warn');
+          return;
+        }
+
+        this.state.currentRound = 1;
+        this.state.totalScore = 0;
+        this.state.roundHistory = [];
+        this.state.usedTopicTitles = [];
+
+        this.startNewRound();
+      },
+
+      startNewRound() {
+        this.clearRevealTimers();
+        const count = this.state.playerCount;
+        const { numbers, lenses } = this.dealNumbersAndLenses(count);
+
+        this.state.players = Array.from({ length: count }, (_, idx) => {
+          const rawName = (this.state.playerNames[idx] || '').trim();
+          return {
+            id: `p_${idx}_${Date.now()}`,
+            name: rawName || `錬金術師${idx + 1}`,
+            colorIdx: idx % PLAYER_PALETTE.length,
+            number: numbers[idx],
+            lens: lenses[idx],
+            hint: ''
+          };
+        });
+
+        this.state.currentTopic = this.pickTopic(this.state.selectedCategory);
+        this.state.currentTaboo = this.pickRandomTaboo();
+        this.state.dealIndex = 0;
+        this.state.isSecretRevealed = false;
+        this.state.resonanceLinkIdx = null;
+        this.state.crystalUsed = false;
+        this.state.crystalResult = null;
+        this.state.phase = 'deal';
+        this.render();
+      },
+
+      // Deal Phase: Secret Check & Pre-input Hint
+      toggleSecretReveal() {
+        this.state.isSecretRevealed = !this.state.isSecretRevealed;
+        if (this.state.isSecretRevealed) {
+          sound.playCrystalChime();
+        } else {
+          sound.playTap();
+        }
+        this.render();
+      },
+
+      updateDealPlayerHint(val) {
+        const idx = this.state.dealIndex;
+        if (this.state.players[idx]) {
+          this.state.players[idx].hint = val;
+        }
+      },
+
+      nextDealPlayer() {
+        sound.playTap();
+        this.state.isSecretRevealed = false;
+        if (this.state.dealIndex + 1 < this.state.players.length) {
+          this.state.dealIndex++;
+          this.render();
+        } else {
+          this.state.phase = 'discuss';
+          this.showToast('全員の秘匿確認完了！価値観を調合しよう！', 'success');
+          this.render();
+        }
+      },
+
+      // Discussion Phase: Secret Re-check Modal
+      openPlayerSecretModal(idx) {
+        sound.playTap();
+        const player = this.state.players[idx];
+        const lensHtml = this.state.enableLensMode ? `
+          <div class="mt-3 p-3.5 rounded-2xl bg-alch-bg/90 border border-white/15 text-left">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">あなたの価値観レンズ</div>
+            <div class="font-black text-sm ${player.lens.color} mt-0.5 flex items-center gap-1.5">
+              <i class="fa-solid ${player.lens.icon}"></i>
+              <span>${this.escapeHtml(player.lens.name)}</span>
+            </div>
+            <p class="text-xs text-slate-200 mt-1">${this.escapeHtml(player.lens.desc)}</p>
+            <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-[11px] text-amber-200 font-bold">
+              <i class="fa-solid fa-lightbulb mr-1 text-amber-400"></i>${this.escapeHtml(player.lens.tip)}
+            </div>
+          </div>
+        ` : '';
+
+        this.openModal(`
+          <div class="text-center">
+            <span class="inline-block px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs font-black mb-2">
+              <i class="fa-solid fa-eye-slash mr-1"></i>本人以外は絶対に覗かないで！
+            </span>
+            <h3 class="text-xl font-black text-white mb-1">${this.escapeHtml(player.name)} の秘匿情報</h3>
+            <p class="text-xs text-slate-400 mb-4">下のカードをタップすると数字と視点が開きます</p>
+
+            <div id="modal-secret-card" onclick="app.toggleModalSecretContent(${idx})" class="cursor-pointer mx-auto max-w-xs rounded-3xl alchemy-card-back border-2 border-amber-400/50 p-6 shadow-mystic transition-transform active:scale-95">
+              <i class="fa-solid fa-fingerprint text-4xl text-amber-400 mb-2"></i>
+              <div class="font-black text-base text-white">タップして秘匿情報を開く</div>
+              <div class="text-xs text-slate-400 mt-1">数字 ＆ 価値観レンズ</div>
+            </div>
+
+            <div id="modal-lens-container" class="hidden max-w-sm mx-auto">
+              ${lensHtml}
+            </div>
+
+            <button onclick="app.closeModal()" class="mt-6 w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">
+              確認完了（ロックして閉じる）
+            </button>
+          </div>
+        `);
+      },
+
+      toggleModalSecretContent(idx) {
+        const card = document.getElementById('modal-secret-card');
+        const lensBox = document.getElementById('modal-lens-container');
+        const player = this.state.players[idx];
+        if (!card) return;
+
+        if (card.dataset.opened === 'true') {
+          sound.playTap();
+          card.dataset.opened = 'false';
+          card.className = 'cursor-pointer mx-auto max-w-xs rounded-3xl alchemy-card-back border-2 border-amber-400/50 p-6 shadow-mystic transition-transform active:scale-95';
+          card.innerHTML = `<i class="fa-solid fa-fingerprint text-4xl text-amber-400 mb-2"></i><div class="font-black text-base text-white">タップして秘匿情報を開く</div><div class="text-xs text-slate-400 mt-1">数字 ＆ 価値観レンズ</div>`;
+          if (lensBox) lensBox.classList.add('hidden');
+        } else {
+          sound.playCrystalChime();
+          card.dataset.opened = 'true';
+          card.className = 'cursor-pointer mx-auto max-w-xs rounded-3xl parchment-card border-4 border-amber-500 p-5 shadow-gold-glow transition-transform active:scale-95';
+          card.innerHTML = `
+            <div class="font-display text-[11px] tracking-widest text-amber-800 font-bold">SECRET NUMBER</div>
+            <div class="font-num font-black text-6xl text-slate-900 my-1">${player.number}</div>
+            <div class="text-[11px] text-amber-900/75 font-bold">タップして隠す</div>
+          `;
+          if (lensBox && this.state.enableLensMode) lensBox.classList.remove('hidden');
+        }
+      },
+
+      // Discussion Phase: Hint Input, Reorder, Resonance Link, Truth Scale
+      updatePlayerHint(idx, val) {
+        this.state.players[idx].hint = val;
+      },
+
+      movePlayerCard(idx, dir) {
+        const targetIdx = idx + dir;
+        if (targetIdx < 0 || targetIdx >= this.state.players.length) return;
+        sound.playSwap();
+
+        const arr = this.state.players;
+        [arr[idx], arr[targetIdx]] = [arr[targetIdx], arr[idx]];
+        this.render();
+      },
+
+      // Drag & Drop
+      handleDragStart(e, idx) {
+        this.state.draggedIdx = idx;
+        e.dataTransfer.effectAllowed = 'move';
+        e.currentTarget.classList.add('dragging-card');
+      },
+
+      handleDragEnd(e) {
+        e.currentTarget.classList.remove('dragging-card');
+        document.querySelectorAll('.player-sort-card').forEach(el => el.classList.remove('drag-over-card'));
+        this.state.draggedIdx = null;
+      },
+
+      handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      },
+
+      handleDragEnter(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over-card');
+      },
+
+      handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over-card');
+      },
+
+      handleDrop(e, targetIdx) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over-card');
+        const fromIdx = this.state.draggedIdx;
+        if (fromIdx === null || fromIdx === targetIdx) return;
+
+        sound.playSwap();
+        const [moved] = this.state.players.splice(fromIdx, 1);
+        this.state.players.splice(targetIdx, 0, moved);
+        this.state.draggedIdx = null;
+        this.render();
+      },
+
+      // Toggle Resonance Link between adjacent players (idx and idx + 1)
+      toggleResonanceLink(idx) {
+        if (idx < 0 || idx >= this.state.players.length - 1) return;
+        if (this.state.resonanceLinkIdx === idx) {
+          sound.playTap();
+          this.state.resonanceLinkIdx = null;
+          this.showToast('共鳴リンクを解除しました', 'info');
+        } else {
+          sound.playResonanceLock();
+          this.state.resonanceLinkIdx = idx;
+          const p1 = this.state.players[idx].name;
+          const p2 = this.state.players[idx + 1].name;
+          this.showToast(`「${p1}」と「${p2}」に共鳴リンクを接続！`, 'success');
+        }
+        this.render();
+      },
+
+      // Open "Scale of Truth" (真実の天秤) Modal
+      openTruthScaleModal() {
+        sound.playTap();
+        if (this.state.crystalUsed) {
+          const res = this.state.crystalResult;
+          this.openModal(`
+            <div class="text-center">
+              <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+              <h3 class="text-lg font-black text-white mb-2">真実の天秤（使用済み）</h3>
+              <p class="text-xs text-slate-300 mb-4">このラウンドの天秤の啓示は以下の通りです：</p>
+              <div class="p-4 rounded-2xl bg-alch-panel border ${res.isAscending ? 'border-emerald-400/50' : 'border-rose-400/50'} mb-6">
+                <div class="text-sm font-black text-white mb-1">
+                  「${this.escapeHtml(res.leftName)}」 vs 「${this.escapeHtml(res.rightName)}」
+                </div>
+                <div class="text-base font-black ${res.isAscending ? 'text-emerald-400' : 'text-rose-400'}">
+                  ${res.isAscending
+                    ? '<i class="fa-solid fa-check-circle mr-1"></i>左の方が小さい！（現在の大小関係でOK）'
+                    : '<i class="fa-solid fa-triangle-exclamation mr-1"></i>実は逆転している！（要入れ替え！）'
+                  }
+                </div>
+              </div>
+              <button onclick="app.closeModal()" class="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold">閉じる</button>
+            </div>
+          `);
+          return;
+        }
+
+        const optionsHtml = this.state.players.map((p, i) => `
+          <option value="${i}">${i + 1}位：${this.escapeHtml(p.name)}</option>
+        `).join('');
+
+        this.openModal(`
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg font-black text-cyan-300 flex items-center gap-2">
+                <i class="fa-solid fa-scale-balanced"></i>真実の天秤（お助けクリスタル）
+              </h3>
+              <button onclick="app.closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-4">
+              1ラウンドに<strong>1回だけ</strong>、2人のカードを天秤にかけて「左の方が小さいか（昇順か）」を判定できます。<span class="text-amber-300 font-bold">※具体的な数字は秘密のままです。</span>
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+              <div class="p-3 rounded-2xl bg-alch-bg border border-sky-500/35">
+                <label class="block text-[11px] font-black text-sky-300 mb-1">左の皿（小さいと予想）</label>
+                <select id="scale-left-idx" class="w-full bg-alch-panel text-white font-bold text-sm px-3 py-2 rounded-xl border border-white/15 focus:outline-none">
+                  ${optionsHtml}
+                </select>
+              </div>
+              <div class="p-3 rounded-2xl bg-alch-bg border border-rose-500/35">
+                <label class="block text-[11px] font-black text-rose-300 mb-1">右の皿（大きいと予想）</label>
+                <select id="scale-right-idx" class="w-full bg-alch-panel text-white font-bold text-sm px-3 py-2 rounded-xl border border-white/15 focus:outline-none">
+                  ${this.state.players.map((p, i) => `<option value="${i}" ${i === 1 ? 'selected' : ''}>${i + 1}位：${this.escapeHtml(p.name)}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <button onclick="app.executeTruthScale()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-alch-bg font-black shadow-btn-3d btn-tactile flex items-center justify-center gap-2">
+              <i class="fa-solid fa-scale-balanced"></i>
+              <span>クリスタルを消費して天秤にかける！</span>
+            </button>
+          </div>
+        `);
+      },
+
+      executeTruthScale() {
+        const leftIdx = parseInt(document.getElementById('scale-left-idx').value, 10);
+        const rightIdx = parseInt(document.getElementById('scale-right-idx').value, 10);
+
+        if (leftIdx === rightIdx) {
+          this.showToast('異なる2人のプレイヤーを選んでください', 'warn');
+          return;
+        }
+
+        const leftPlayer = this.state.players[leftIdx];
+        const rightPlayer = this.state.players[rightIdx];
+        const isAscending = leftPlayer.number < rightPlayer.number;
+
+        this.state.crystalUsed = true;
+        this.state.crystalResult = {
+          leftName: leftPlayer.name,
+          rightName: rightPlayer.name,
+          isAscending
+        };
+
+        sound.playScaleTilt(isAscending);
+        this.render();
+
+        // Visual Animated Balance Scale Modal
+        this.openModal(`
+          <div class="text-center animate-pop-in">
+            <div class="font-display text-xs tracking-widest text-amber-300 mb-1">REVELATION OF THE SCALE</div>
+            <h3 class="text-lg sm:text-xl font-black text-white mb-4">
+              「${this.escapeHtml(leftPlayer.name)}」 vs 「${this.escapeHtml(rightPlayer.name)}」
+            </h3>
+
+            <!-- Animated Balance Scale Visual -->
+            <div class="my-4 py-4 px-2 rounded-2xl bg-alch-bg/90 border border-white/10 relative overflow-hidden">
+              <div id="scale-beam-el" class="scale-beam flex items-center justify-between max-w-xs mx-auto px-2 py-3 relative" style="transform: rotate(0deg);">
+                <div class="px-2.5 py-1.5 rounded-xl bg-sky-500/20 border border-sky-400/50 text-sky-200 text-xs font-black truncate max-w-[115px]">
+                  ${this.escapeHtml(leftPlayer.name)}
+                </div>
+                <div class="h-1.5 flex-1 bg-gradient-to-r from-sky-400 via-amber-400 to-rose-400 mx-1 rounded-full"></div>
+                <div class="px-2.5 py-1.5 rounded-xl bg-rose-500/20 border border-rose-400/50 text-rose-200 text-xs font-black truncate max-w-[115px]">
+                  ${this.escapeHtml(rightPlayer.name)}
+                </div>
+              </div>
+              <div class="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[16px] border-b-amber-400 mx-auto -mt-1"></div>
+              <div class="text-[11px] text-slate-400 mt-1 font-bold">重たい（数字が大きい）方へ天秤が傾きます</div>
+            </div>
+
+            <div class="p-4 rounded-2xl ${isAscending ? 'bg-emerald-950/80 border-emerald-400/60' : 'bg-rose-950/80 border-rose-400/60'} border-2 mb-5">
+              ${isAscending ? `
+                <div class="text-base sm:text-lg font-black text-emerald-300 mb-1">
+                  <i class="fa-solid fa-circle-check mr-1.5"></i>左 ＜ 右 で正しい大小関係です！
+                </div>
+                <p class="text-xs text-emerald-100">「${this.escapeHtml(leftPlayer.name)}」の方が確実に小さい数字を持っています。</p>
+              ` : `
+                <div class="text-base sm:text-lg font-black text-rose-300 mb-1">
+                  <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>実は逆転しています！（左 ＞ 右）
+                </div>
+                <p class="text-xs text-rose-100">「${this.escapeHtml(rightPlayer.name)}」の方が小さい数字です！並び順を入れ替えましょう！</p>
+              `}
+            </div>
+
+            <button onclick="app.closeModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">
+              議論ボードへ戻る
+            </button>
+          </div>
+        `);
+
+        // Trigger beam tilt after mount
+        setTimeout(() => {
+          const beam = document.getElementById('scale-beam-el');
+          if (beam) {
+            // Right heavier -> +11deg, Left heavier -> -11deg
+            beam.style.transform = isAscending ? 'rotate(11deg)' : 'rotate(-11deg)';
+          }
+        }, 80);
+      },
+
+      // Confirmation Dialog before Grand Reveal
+      confirmStartReveal() {
+        sound.playTap();
+        const linkText = this.state.resonanceLinkIdx !== null
+          ? `<span class="text-amber-300 font-black">「${this.escapeHtml(this.state.players[this.state.resonanceLinkIdx].name)}」と「${this.escapeHtml(this.state.players[this.state.resonanceLinkIdx + 1].name)}」</span>`
+          : `<span class="text-slate-400">未設定（ペア予想なし）</span>`;
+
+        this.openModal(`
+          <div class="text-center">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-amber-300 flex items-center justify-center text-2xl mx-auto mb-3 shadow-gold-glow">
+              <i class="fa-solid fa-wand-sparkles"></i>
+            </div>
+            <h3 class="text-xl font-black text-white mb-2">調合を完了し、カードをオープンしますか？</h3>
+            <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+              左（1位）から右（${this.state.players.length}位）へ順番にカードがめくられます。
+            </p>
+            <div class="p-3 rounded-2xl bg-alch-bg/90 border border-white/10 text-xs mb-6">
+              <div class="text-slate-400 font-bold mb-1">現在の共鳴リンク設定（差10以内予想）</div>
+              <div>${linkText}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="app.closeModal()" class="py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold transition">
+                まだ話し合う
+              </button>
+              <button onclick="app.closeModal(); app.startReveal();" class="py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-400 text-alch-bg font-black shadow-btn-3d btn-tactile">
+                せーの、オープン！
+              </button>
+            </div>
+          </div>
+        `);
+      },
+
+      clearRevealTimers() {
+        if (this.state.revealTimers && this.state.revealTimers.length) {
+          this.state.revealTimers.forEach(t => clearTimeout(t));
+        }
+        this.state.revealTimers = [];
+      },
+
+      // Grand Reveal Phase
+      startReveal() {
+        this.clearRevealTimers();
+        const players = this.state.players;
+        const mistakeIndices = [];
+
+        for (let i = 1; i < players.length; i++) {
+          if (players[i].number < players[i - 1].number) {
+            mistakeIndices.push(i);
+          }
+        }
+
+        const success = mistakeIndices.length === 0;
+
+        // Check Resonance Link (Ascending & Diff <= 10)
+        let resonanceHit = false;
+        let resonanceDiff = null;
+        let resonancePairNames = null;
+        if (this.state.resonanceLinkIdx !== null && this.state.resonanceLinkIdx < players.length - 1) {
+          const pA = players[this.state.resonanceLinkIdx];
+          const pB = players[this.state.resonanceLinkIdx + 1];
+          resonanceDiff = Math.abs(pB.number - pA.number);
+          resonancePairNames = `${pA.name} & ${pB.name}`;
+          if (pA.number < pB.number && resonanceDiff <= 10) {
+            resonanceHit = true;
+          }
+        }
+
+        // Calculate Synchro Rate (0% - 100%)
+        const sortedIds = [...players].sort((a, b) => a.number - b.number).map(p => p.id);
+        let displacementSum = 0;
+        players.forEach((p, currentIdx) => {
+          const idealIdx = sortedIds.indexOf(p.id);
+          displacementSum += Math.abs(currentIdx - idealIdx);
+        });
+        const maxPossibleDisplacement = Math.floor((players.length * players.length) / 2) || 1;
+        let synchroRate = Math.max(0, Math.round(100 - (displacementSum / maxPossibleDisplacement) * 85));
+        if (success) {
+          synchroRate = resonanceHit ? 100 : Math.min(99, 93 + players.length);
+        }
+
+        // Calculate Score
+        let roundPoints = 0;
+        if (success) {
+          roundPoints += 100;
+          if (!this.state.crystalUsed && this.state.enableScaleCrystal) roundPoints += 20;
+          if (resonanceHit) roundPoints += 50;
+        } else {
+          roundPoints += Math.round(synchroRate * 0.4);
+          if (resonanceHit) roundPoints += 30;
+        }
+
+        this.state.revealResult = {
+          success,
+          mistakeIndices,
+          resonanceHit,
+          resonanceDiff,
+          resonancePairNames,
+          synchroRate,
+          roundPoints
+        };
+
+        this.state.revealStep = 0;
+        this.state.isRevealing = true;
+        this.state.phase = 'reveal';
+        this.render();
+
+        // Sequential card flip
+        players.forEach((_, idx) => {
+          const timerId = setTimeout(() => {
+            this.state.revealStep = idx + 1;
+            const isMistake = mistakeIndices.includes(idx);
+            const cardEl = document.getElementById(`reveal-card-${idx}`);
+            if (cardEl) cardEl.classList.add('is-flipped');
+            sound.playCardFlip(idx, isMistake);
+
+            if (isMistake) {
+              const shakeTimer = setTimeout(() => {
+                const wrapper = document.getElementById(`reveal-wrapper-${idx}`);
+                if (wrapper) wrapper.classList.add('animate-shake');
+              }, 260);
+              this.state.revealTimers.push(shakeTimer);
+            }
+
+            if (idx === players.length - 1) {
+              const finishTimer = setTimeout(() => {
+                this.finishRevealSequence();
+              }, 750);
+              this.state.revealTimers.push(finishTimer);
+            }
+          }, 680 * (idx + 1));
+          this.state.revealTimers.push(timerId);
+        });
+      },
+
+      skipRevealAnimation() {
+        if (!this.state.isRevealing) return;
+        this.clearRevealTimers();
+        const players = this.state.players;
+        this.state.revealStep = players.length;
+
+        players.forEach((_, idx) => {
+          const cardEl = document.getElementById(`reveal-card-${idx}`);
+          if (cardEl) cardEl.classList.add('is-flipped');
+        });
+        this.finishRevealSequence();
+      },
+
+      finishRevealSequence() {
+        if (!this.state.isRevealing) return;
+        this.clearRevealTimers();
+        this.state.isRevealing = false;
+        const res = this.state.revealResult;
+
+        this.state.totalScore += res.roundPoints;
+        this.state.roundHistory.push({
+          round: this.state.currentRound,
+          topicTitle: this.state.currentTopic.title,
+          success: res.success,
+          resonanceHit: res.resonanceHit,
+          resonancePairNames: res.resonancePairNames,
+          resonanceDiff: res.resonanceDiff,
+          synchroRate: res.synchroRate,
+          points: res.roundPoints
+        });
+
+        if (res.success) {
+          sound.playFanfare();
+          if (res.resonanceHit) {
+            setTimeout(() => sound.playPerfectResonance(), 450);
+          }
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: res.resonanceHit ? 150 : 95,
+              spread: 85,
+              origin: { y: 0.6 },
+              colors: ['#F59E0B', '#10B981', '#06B6D4', '#8B5CF6', '#F43F5E']
+            });
+          }
+        } else {
+          sound.playDiscord();
+        }
+        this.render();
+      },
+
+      nextRoundOrFinish() {
+        sound.playTap();
+        if (this.state.currentRound >= this.state.totalRounds) {
+          sound.playFanfare();
+          this.state.phase = 'final';
+          this.render();
+          if (typeof confetti === 'function') {
+            confetti({
+              particleCount: 120,
+              spread: 90,
+              origin: { y: 0.55 },
+              colors: ['#F59E0B', '#10B981', '#06B6D4', '#8B5CF6']
+            });
+          }
+        } else {
+          this.state.currentRound++;
+          this.startNewRound();
+        }
+      },
+
+      getFinalTeamDiagnosis() {
+        const history = this.state.roundHistory;
+        const avgSynchro = Math.round(history.reduce((acc, r) => acc + r.synchroRate, 0) / (history.length || 1));
+        const successCount = history.filter(r => r.success).length;
+        const requirePerfectAll = successCount === history.length && history.length > 0;
+
+        // Best resonance pair
+        const resonanceHits = history.filter(r => r.resonanceHit && r.resonancePairNames);
+        let bestPairText = 'なし（次回は共鳴リンク的中を狙おう！）';
+        if (resonanceHits.length > 0) {
+          resonanceHits.sort((a, b) => a.resonanceDiff - b.resonanceDiff);
+          bestPairText = `${resonanceHits[0].resonancePairNames}（数字差 ${resonanceHits[0].resonanceDiff}）`;
+        }
+
+        const matchedTitle = TEAM_TITLES.find(t => {
+          if (t.requirePerfectAll) {
+            return requirePerfectAll && avgSynchro >= t.minSynchro;
+          }
+          return avgSynchro >= t.minSynchro;
+        }) || TEAM_TITLES[TEAM_TITLES.length - 1];
+
+        return {
+          avgSynchro,
+          successCount,
+          totalRounds: history.length,
+          bestPairText,
+          teamTitle: matchedTitle
+        };
+      },
+
+      copyShareText() {
+        sound.playTap();
+        const diag = this.getFinalTeamDiagnosis();
+        const memberNames = this.state.players.map(p => p.name).join('・');
+        const shareText = [
+          `🧪『シンクロ・アルケミスト 〜価値観調合の儀〜』結果報告`,
+          `👑 チーム称号：【${diag.teamTitle.title}】`,
+          `✨ 平均シンクロ率：${diag.avgSynchro}%（調合成功 ${diag.successCount}/${diag.totalRounds}回）`,
+          `💎 総合スコア：${this.state.totalScore} pt`,
+          `🔗 ベスト共鳴ペア：${diag.bestPairText}`,
+          `👥 参加メンバー：${memberNames}`,
+          `#シンクロアルケミスト #価値観合わせゲーム`
+        ].join('\n');
+
+        const textarea = document.createElement('textarea');
+        textarea.value = shareText;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          this.showToast('結果シェア用テキストをクリップボードにコピーしました！', 'success');
+        } catch (err) {
+          this.showToast('コピーに失敗しました', 'error');
+        }
+        document.body.removeChild(textarea);
+      },
+
+      /**
+       * ============================================================================
+       * 4. VIEW RENDERERS
+       * ============================================================================
+       */
+      updateHeaderStatus() {
+        const statusEl = document.getElementById('header-status');
+        if (this.state.phase === 'setup') {
+          statusEl.classList.add('hidden');
+          statusEl.classList.remove('flex');
+          return;
+        }
+        statusEl.classList.remove('hidden');
+        statusEl.classList.add('flex');
+
+        statusEl.innerHTML = `
+          <span class="text-amber-300 font-num"><i class="fa-solid fa-compass mr-1"></i>R${this.state.currentRound}/${this.state.totalRounds}</span>
+          <span class="text-white/20">|</span>
+          <span class="text-emerald-400 font-num"><i class="fa-solid fa-gem mr-1"></i>${this.state.totalScore} pt</span>
+        `;
+      },
+
+      render() {
+        this.updateHeaderStatus();
+        const container = document.getElementById('app-container');
+
+        switch (this.state.phase) {
+          case 'setup':
+            container.innerHTML = this.renderSetupView();
+            break;
+          case 'deal':
+            container.innerHTML = this.renderDealView();
+            break;
+          case 'discuss':
+            container.innerHTML = this.renderDiscussView();
+            break;
+          case 'reveal':
+            container.innerHTML = this.renderRevealView();
+            break;
+          case 'final':
+            container.innerHTML = this.renderFinalResultView();
+            break;
+        }
+      },
+
+      // --------------------------------------------------------------------------
+      // VIEW 1: SETUP SCREEN
+      // --------------------------------------------------------------------------
+      renderSetupView() {
+        const counts = [2, 3, 4, 5, 6, 7, 8];
+        const countButtons = counts.map(c => {
+          const active = this.state.playerCount === c;
+          return `
+            <button onclick="app.setPlayerCount(${c})" class="py-2.5 rounded-xl font-num font-black text-sm sm:text-base transition btn-tactile ${
+              active
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg shadow-gold-glow'
+                : 'bg-alch-bg/80 hover:bg-alch-panel text-slate-300 border border-white/10'
+            }">
+              ${c}人
+            </button>
+          `;
+        }).join('');
+
+        let playerInputs = '';
+        for (let i = 0; i < this.state.playerCount; i++) {
+          const pColor = PLAYER_PALETTE[i % PLAYER_PALETTE.length];
+          playerInputs += `
+            <div class="flex items-center gap-2.5 bg-alch-bg/85 p-2 rounded-xl border border-white/10 focus-within:border-amber-400/70 transition">
+              <span class="w-7 h-7 rounded-lg ${pColor.bg} text-white font-num font-black text-xs flex items-center justify-center shrink-0">
+                P${i + 1}
+              </span>
+              <input
+                type="text"
+                maxlength="12"
+                value="${this.escapeHtml(this.state.playerNames[i])}"
+                oninput="app.updatePlayerName(${i}, this.value)"
+                placeholder="錬金術師${i + 1}"
+                class="w-full bg-transparent font-bold text-sm text-white focus:outline-none placeholder:text-slate-500"
+              >
+            </div>
+          `;
+        }
+
+        const roundOptions = [
+          { count: 1, label: '1ラウンド', sub: 'サクッと1本勝負' },
+          { count: 3, label: '3ラウンド', sub: '標準・称号診断あり' },
+          { count: 5, label: '5ラウンド', sub: 'じっくり白熱バトル' }
+        ];
+
+        const roundButtons = roundOptions.map(r => {
+          const active = this.state.totalRounds === r.count;
+          return `
+            <button onclick="app.setTotalRounds(${r.count})" class="p-3 rounded-2xl border text-center transition btn-tactile ${
+              active
+                ? 'border-amber-400 bg-amber-500/15 shadow-gold-glow'
+                : 'border-white/10 bg-alch-bg/70 hover:border-white/25'
+            }">
+              <div class="font-black text-xs sm:text-sm ${active ? 'text-amber-300' : 'text-white'}">${r.label}</div>
+              <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">${r.sub}</div>
+            </button>
+          `;
+        }).join('');
+
+        const categories = [
+          { key: 'all', name: 'すべて（全90問）', icon: 'fa-shuffle', color: 'bg-gradient-to-r from-amber-500 to-emerald-500' },
+          ...Object.values(TOPIC_CATEGORIES).map(c => ({ key: c.id, name: c.name, icon: c.icon, color: c.color })),
+          { key: 'custom', name: 'カスタムお題作成', icon: 'fa-pen-nib', color: 'bg-indigo-600' }
+        ];
+
+        const categoryCards = categories.map(cat => {
+          const active = this.state.selectedCategory === cat.key;
+          return `
+            <button onclick="app.setCategory('${cat.key}')" class="p-3 rounded-2xl border text-left transition flex items-center gap-2.5 btn-tactile ${
+              active
+                ? 'border-amber-400 bg-amber-500/15 shadow-gold-glow'
+                : 'border-white/10 bg-alch-bg/70 hover:border-white/25'
+            }">
+              <span class="w-9 h-9 rounded-xl ${cat.color} text-white flex items-center justify-center shrink-0 shadow-sm">
+                <i class="fa-solid ${cat.icon}"></i>
+              </span>
+              <div class="min-w-0">
+                <div class="font-black text-xs sm:text-sm text-white truncate">${cat.name}</div>
+                <div class="text-[11px] font-bold text-slate-400">
+                  ${cat.key === 'all' ? '全ジャンルから出題' : cat.key === 'custom' ? '自由に入力して作成' : '厳選18問収録'}
+                </div>
+              </div>
+            </button>
+          `;
+        }).join('');
+
+        const customTopicForm = this.state.selectedCategory === 'custom' ? `
+          <div class="mt-4 p-4 rounded-2xl bg-alch-bg/90 border border-dashed border-amber-400/50 space-y-3 animate-pop-in">
+            <div class="text-xs font-black text-amber-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-pen-nib"></i>自由にお題と1〜100の基準を設定
+            </div>
+            <input
+              type="text"
+              value="${this.escapeHtml(this.state.customTopic.title)}"
+              oninput="app.updateCustomTopicField('title', this.value)"
+              placeholder="お題を入力（例：無人島に持っていきたいもの）"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-alch-panel border border-white/15 focus:border-amber-400 focus:outline-none text-sm font-bold text-white"
+            >
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input
+                type="text"
+                value="${this.escapeHtml(this.state.customTopic.min)}"
+                oninput="app.updateCustomTopicField('min', this.value)"
+                placeholder="1の基準（例：いらない）"
+                class="w-full px-3 py-2 rounded-xl bg-alch-panel border border-sky-500/35 focus:border-sky-400 focus:outline-none text-xs font-bold text-white"
+              >
+              <input
+                type="text"
+                value="${this.escapeHtml(this.state.customTopic.max)}"
+                oninput="app.updateCustomTopicField('max', this.value)"
+                placeholder="100の基準（例：絶対必須！）"
+                class="w-full px-3 py-2 rounded-xl bg-alch-panel border border-rose-500/35 focus:border-rose-400 focus:outline-none text-xs font-bold text-white"
+              >
+            </div>
+          </div>
+        ` : '';
+
+        return `
+          <div class="max-w-3xl w-full mx-auto space-y-5 sm:space-y-6 animate-pop-in">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-br from-alch-surface via-alch-panel to-indigo-950 rounded-3xl p-5 sm:p-8 shadow-mystic border border-amber-500/35 text-center relative overflow-hidden">
+              <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-400/35 text-amber-300 text-[11px] sm:text-xs font-black mb-2.5">
+                <i class="fa-solid fa-sparkles"></i> 心理推理 × 価値観シンクロ・パーティゲーム
+              </div>
+              <h2 class="text-xl sm:text-3xl md:text-4xl font-black text-white tracking-tight mb-2">
+                言葉の錬金術で、<span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-200 to-emerald-300">心の数字</span>を調合せよ。
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+                秘密の数字「1〜100」と、思考を歪める「価値観レンズ」を手に、言葉の例えだけで1→100の昇順に並び替えよう！
+              </p>
+            </div>
+
+            <!-- Step 1: Players (2-8) & Name Tools -->
+            <div class="bg-alch-surface rounded-3xl p-4 sm:p-6 shadow-mystic border border-white/10">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h3 class="font-black text-base sm:text-lg text-white flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-xl bg-amber-500 text-alch-bg font-num font-black text-sm flex items-center justify-center">1</span>
+                  参加人数と錬金術師名
+                </h3>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="app.shufflePlayerNames()" class="px-2.5 py-1 rounded-lg bg-alch-panel hover:bg-indigo-900 text-amber-300 border border-amber-400/30 text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-shuffle"></i> 名前シャッフル
+                  </button>
+                  <button onclick="app.resetPlayerNames()" class="px-2.5 py-1 rounded-lg bg-alch-panel hover:bg-indigo-900 text-slate-300 border border-white/15 text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-rotate-left"></i> リセット
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1.5 sm:gap-2 mb-4">
+                ${countButtons}
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${playerInputs}
+              </div>
+            </div>
+
+            <!-- Step 2: Rounds & Original Gimmick Toggles -->
+            <div class="bg-alch-surface rounded-3xl p-4 sm:p-6 shadow-mystic border border-white/10">
+              <h3 class="font-black text-base sm:text-lg text-white flex items-center gap-2 mb-3">
+                <span class="w-7 h-7 rounded-xl bg-purple-500 text-white font-num font-black text-sm flex items-center justify-center">2</span>
+                ラウンド数＆オリジナルギミック設定
+              </h3>
+
+              <!-- Round Selection -->
+              <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
+                ${roundButtons}
+              </div>
+
+              <!-- 3 Gimmick Toggles -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                <!-- Lens Toggle -->
+                <div onclick="app.toggleOption('enableLensMode')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
+                  this.state.enableLensMode
+                    ? 'bg-purple-950/55 border-purple-400 shadow-md'
+                    : 'bg-alch-bg/60 border-white/10 opacity-70'
+                }">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-black text-xs sm:text-sm text-purple-300 flex items-center gap-1.5">
+                      <i class="fa-solid fa-glasses"></i>価値観レンズ
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      this.state.enableLensMode ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-300'
+                    }">
+                      ${this.state.enableLensMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 leading-relaxed">
+                    全10種の秘密の視点ロール（小学3年生・頑固オヤジ等）を配布！
+                  </p>
+                </div>
+
+                <!-- Taboo Toggle -->
+                <div onclick="app.toggleOption('enableTabooMode')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
+                  this.state.enableTabooMode
+                    ? 'bg-rose-950/55 border-rose-400 shadow-md'
+                    : 'bg-alch-bg/60 border-white/10 opacity-70'
+                }">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-black text-xs sm:text-sm text-rose-300 flex items-center gap-1.5">
+                      <i class="fa-solid fa-ban"></i>禁句縛り
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      this.state.enableTabooMode ? 'bg-rose-500 text-white' : 'bg-slate-700 text-slate-300'
+                    }">
+                      ${this.state.enableTabooMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 leading-relaxed">
+                    「カタカナ禁止」「名詞1単語のみ」等の表現制限が毎ラウンド発動！
+                  </p>
+                </div>
+
+                <!-- Scale Crystal Toggle -->
+                <div onclick="app.toggleOption('enableScaleCrystal')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
+                  this.state.enableScaleCrystal
+                    ? 'bg-cyan-950/55 border-cyan-400 shadow-md'
+                    : 'bg-alch-bg/60 border-white/10 opacity-70'
+                }">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-black text-xs sm:text-sm text-cyan-300 flex items-center gap-1.5">
+                      <i class="fa-solid fa-scale-balanced"></i>真実の天秤
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      this.state.enableScaleCrystal ? 'bg-cyan-500 text-alch-bg' : 'bg-slate-700 text-slate-300'
+                    }">
+                      ${this.state.enableScaleCrystal ? '1回/R' : 'OFF'}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 leading-relaxed">
+                    1ラウンド1回だけ選んだ2枚の大小関係を判定できるお助け水晶！
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Topic Category -->
+            <div class="bg-alch-surface rounded-3xl p-4 sm:p-6 shadow-mystic border border-white/10">
+              <h3 class="font-black text-base sm:text-lg text-white flex items-center gap-2 mb-3">
+                <span class="w-7 h-7 rounded-xl bg-emerald-500 text-alch-bg font-num font-black text-sm flex items-center justify-center">3</span>
+                お題のジャンルを選択
+              </h3>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                ${categoryCards}
+              </div>
+              ${customTopicForm}
+            </div>
+
+            <!-- Start Button -->
+            <button onclick="app.startGame()" class="w-full py-4 sm:py-5 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 hover:brightness-105 text-alch-bg font-black text-lg sm:text-xl shadow-gold-glow btn-tactile flex items-center justify-center gap-3">
+              <i class="fa-solid fa-wand-sparkles"></i>
+              <span>調合の儀を開始する！</span>
+            </button>
+          </div>
+        `;
+      },
+
+      // --------------------------------------------------------------------------
+      // Reusable Topic & Taboo Banner
+      // --------------------------------------------------------------------------
+      renderTopicBanner(allowShuffle = true) {
+        const topic = this.state.currentTopic;
+        const taboo = this.state.currentTaboo;
+
+        return `
+          <div class="bg-alch-surface rounded-3xl p-4 sm:p-5 shadow-mystic border border-amber-500/30 relative">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${topic.categoryColor} text-white text-xs font-black shadow-sm">
+                  <i class="fa-solid ${topic.categoryIcon}"></i>
+                  ${this.escapeHtml(topic.categoryName)}
+                </span>
+                ${this.state.enableLensMode ? `
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-[11px] font-black">
+                    <i class="fa-solid fa-glasses"></i>価値観レンズON
+                  </span>
+                ` : ''}
+              </div>
+
+              ${allowShuffle ? `
+                <button onclick="app.shuffleTopicAndTaboo()" class="px-3 py-1.5 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-amber-400/25 text-amber-300 text-xs font-black flex items-center gap-1.5 transition btn-tactile">
+                  <i class="fa-solid fa-shuffle"></i>
+                  <span>お題シャッフル</span>
+                </button>
+              ` : ''}
+            </div>
+
+            <div class="text-center my-1.5 sm:my-2.5">
+              <div class="font-display text-[10px] tracking-[0.25em] text-amber-400/80 uppercase mb-1">THEME / 今回の調合テーマ</div>
+              <h2 class="text-lg sm:text-2xl md:text-3xl font-black text-white leading-snug">
+                「${this.escapeHtml(topic.title)}」
+              </h2>
+            </div>
+
+            <!-- 1 to 100 Scale Guide -->
+            <div class="mt-2.5 bg-alch-bg/90 rounded-2xl p-3 border border-white/10">
+              <div class="flex items-center justify-between gap-2 text-xs font-bold mb-1.5">
+                <span class="text-sky-300 flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-400/40 font-num font-black">1</span>
+                  <span class="line-clamp-1">${this.escapeHtml(topic.min)}</span>
+                </span>
+                <span class="text-rose-300 flex items-center gap-1.5 text-right">
+                  <span class="line-clamp-1">${this.escapeHtml(topic.max)}</span>
+                  <span class="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-400/40 font-num font-black">100</span>
+                </span>
+              </div>
+              <div class="h-2 w-full rounded-full bg-gradient-to-r from-sky-400 via-amber-400 to-rose-500"></div>
+            </div>
+
+            ${taboo ? `
+              <div class="mt-2.5 px-3.5 py-2.5 rounded-2xl bg-rose-950/65 border border-rose-500/45 flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 text-xs">
+                <span class="inline-flex items-center self-start sm:self-auto px-2.5 py-0.5 rounded-lg bg-rose-500 text-white font-black shrink-0">
+                  <i class="fa-solid fa-ban mr-1"></i>禁句縛り
+                </span>
+                <div>
+                  <span class="font-black text-rose-200 mr-1.5">${this.escapeHtml(taboo.title)}</span>
+                  <span class="text-rose-300/90">${this.escapeHtml(taboo.desc)}</span>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      },
+
+      // --------------------------------------------------------------------------
+      // VIEW 2: DEAL PHASE (Pass & Reveal - 秘密の調合)
+      // --------------------------------------------------------------------------
+      renderDealView() {
+        const idx = this.state.dealIndex;
+        const player = this.state.players[idx];
+        const pColor = PLAYER_PALETTE[player.colorIdx];
+        const total = this.state.players.length;
+        const revealed = this.state.isSecretRevealed;
+
+        return `
+          <div class="max-w-xl w-full mx-auto space-y-4 sm:space-y-5 animate-pop-in">
+            ${this.renderTopicBanner(true)}
+
+            <!-- Progress Dots -->
+            <div class="flex items-center justify-center gap-2">
+              ${this.state.players.map((p, i) => `
+                <div class="h-2 rounded-full transition-all ${
+                  i === idx ? 'w-8 bg-amber-400 shadow-gold-glow' : i < idx ? 'w-3 bg-emerald-400' : 'w-3 bg-white/15'
+                }"></div>
+              `).join('')}
+            </div>
+
+            <!-- Secret Pass Card -->
+            <div class="bg-alch-surface rounded-3xl p-5 sm:p-7 shadow-mystic border border-white/15 text-center">
+              <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border ${pColor.badge} text-xs font-black mb-2">
+                <span>${idx + 1} / ${total} 人目</span>
+              </span>
+
+              <h3 class="text-2xl sm:text-3xl font-black text-white mb-1">
+                ${this.escapeHtml(player.name)} <span class="text-base font-bold text-slate-300">さんの番です</span>
+              </h3>
+              <p class="text-xs font-bold text-rose-400 mb-4">
+                <i class="fa-solid fa-eye-slash mr-1"></i>他の人は画面を見ないでください！
+              </p>
+
+              <!-- 2-Step Tap Secret Card -->
+              <div onclick="app.toggleSecretReveal()" class="cursor-pointer mx-auto max-w-sm rounded-3xl transition-all duration-300 transform hover:scale-[1.01] active:scale-95 p-5 sm:p-6 border-2 ${
+                revealed
+                  ? 'parchment-card border-amber-500 shadow-gold-glow'
+                  : 'alchemy-card-back border-amber-500/45 shadow-mystic'
+              }">
+                ${revealed ? `
+                  <div class="font-display text-[11px] tracking-[0.25em] text-amber-800 font-bold">SECRET NUMBER</div>
+                  <div class="font-num font-black text-7xl text-slate-900 my-1.5 tracking-tighter">
+                    ${player.number}
+                  </div>
+
+                  ${this.state.enableLensMode ? `
+                    <div class="mt-3 p-3.5 rounded-2xl bg-white/75 border border-amber-800/20 text-left">
+                      <div class="text-[10px] font-bold text-amber-900/70 uppercase tracking-wider">あなたの価値観レンズ（秘密の視点）</div>
+                      <div class="font-black text-sm sm:text-base text-slate-900 mt-0.5 flex items-center gap-1.5">
+                        <i class="fa-solid ${player.lens.icon} text-amber-700"></i>
+                        <span>${this.escapeHtml(player.lens.name)}</span>
+                      </div>
+                      <p class="text-xs text-slate-800 mt-1 leading-relaxed font-medium">
+                        ${this.escapeHtml(player.lens.desc)}
+                      </p>
+                      <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-600/30 text-[11px] text-amber-950 font-bold">
+                        <i class="fa-solid fa-lightbulb mr-1 text-amber-700"></i>${this.escapeHtml(player.lens.tip)}
+                      </div>
+                    </div>
+                  ` : ''}
+
+                  <div class="mt-3.5 text-xs font-bold text-amber-900/75 flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-eye-slash"></i> タップして秘匿情報を隠す
+                  </div>
+                ` : `
+                  <div class="py-8">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center mx-auto mb-3">
+                      <i class="fa-solid fa-hand-pointer text-3xl text-amber-300 animate-bounce"></i>
+                    </div>
+                    <div class="font-black text-lg text-white mb-1">タップして秘密を確認</div>
+                    <div class="text-xs text-slate-400 font-bold">
+                      ${this.state.enableLensMode ? '秘密の数字 ＆ 価値観レンズ' : '秘密の数字（1〜100）'}
+                    </div>
+                  </div>
+                `}
+              </div>
+
+              <!-- Optional Pre-Input Metaphor Box (Shown when revealed) -->
+              ${revealed ? `
+                <div class="mt-4 max-w-sm mx-auto text-left animate-pop-in">
+                  <label class="block text-xs font-black text-amber-300 mb-1">
+                    <i class="fa-solid fa-pen-fancy mr-1"></i>自分の例えワード（事前メモ・任意）
+                  </label>
+                  <input
+                    type="text"
+                    maxlength="32"
+                    value="${this.escapeHtml(player.hint)}"
+                    oninput="app.updateDealPlayerHint(this.value)"
+                    placeholder="口頭で発表 or ここに入力してもOK"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-alch-bg border border-amber-400/40 focus:border-amber-400 focus:outline-none text-sm font-bold text-white placeholder:text-slate-500"
+                  >
+                </div>
+              ` : ''}
+
+              <!-- Lock & Next Button -->
+              <div class="mt-5">
+                <button onclick="app.nextDealPlayer()" class="w-full py-4 rounded-2xl font-black text-base sm:text-lg shadow-btn-3d btn-tactile flex items-center justify-center gap-2 transition ${
+                  revealed
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-alch-bg'
+                    : 'bg-alch-panel hover:bg-indigo-900/80 text-white border border-white/15'
+                }">
+                  ${idx + 1 < total
+                    ? `<i class="fa-solid fa-lock"></i><span>隠して次の人へ渡す</span><i class="fa-solid fa-arrow-right"></i>`
+                    : `<i class="fa-solid fa-comments"></i><span>全員確認完了！調合ボードへ</span>`
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      // --------------------------------------------------------------------------
+      // VIEW 3: DISCUSSION & ALCHEMY BOARD
+      // --------------------------------------------------------------------------
+      renderDiscussView() {
+        const players = this.state.players;
+
+        const cardsHtml = players.map((p, idx) => {
+          const pColor = PLAYER_PALETTE[p.colorIdx];
+          const isFirst = idx === 0;
+          const isLast = idx === players.length - 1;
+          const isLinkedLeft = this.state.resonanceLinkIdx === idx - 1;
+          const isLinkedRight = this.state.resonanceLinkIdx === idx;
+          const isLinked = isLinkedLeft || isLinkedRight;
+
+          return `
+            <div class="flex flex-col">
+              <div
+                draggable="true"
+                ondragstart="app.handleDragStart(event, ${idx})"
+                ondragend="app.handleDragEnd(event)"
+                ondragover="app.handleDragOver(event)"
+                ondragenter="app.handleDragEnter(event)"
+                ondragleave="app.handleDragLeave(event)"
+                ondrop="app.handleDrop(event, ${idx})"
+                class="player-sort-card flex-1 bg-alch-surface rounded-3xl p-4 sm:p-5 shadow-mystic border-2 ${
+                  isLinked ? 'border-amber-400 resonance-glow' : pColor.border
+                } flex flex-col justify-between transition-all cursor-grab active:cursor-grabbing relative"
+              >
+                ${isLinked ? `
+                  <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-alch-bg text-[10px] font-black shadow-md whitespace-nowrap">
+                    <i class="fa-solid fa-link mr-1"></i>共鳴リンク中（差10以内予想）
+                  </div>
+                ` : ''}
+
+                <!-- Card Header -->
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-7 h-7 rounded-xl bg-amber-500 text-alch-bg font-num font-black text-xs flex items-center justify-center shrink-0">
+                      ${idx + 1}位
+                    </span>
+                    <span class="font-black text-base text-white truncate">
+                      ${this.escapeHtml(p.name)}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="app.openPlayerSecretModal(${idx})" class="px-2.5 py-1 rounded-lg bg-alch-panel hover:bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold transition" title="自分の数字とレンズをこっそり再確認">
+                      <i class="fa-solid fa-eye"></i> こっそり再確認
+                    </button>
+                    <span class="text-slate-500 hidden sm:inline px-0.5" title="ドラッグで並び替え">
+                      <i class="fa-solid fa-grip-vertical"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Metaphor Input -->
+                <div class="my-1 p-3 rounded-2xl bg-alch-bg/90 border border-white/10">
+                  <label class="block text-[11px] font-black ${pColor.text} mb-1">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>例えワード（リアルタイム編集）
+                  </label>
+                  <input
+                    type="text"
+                    maxlength="32"
+                    value="${this.escapeHtml(p.hint)}"
+                    oninput="app.updatePlayerHint(${idx}, this.value)"
+                    placeholder="例：伝説の聖剣を抜いた瞬間"
+                    class="w-full px-3 py-2 rounded-xl bg-alch-panel border border-white/10 focus:border-amber-400 focus:outline-none text-sm font-bold text-white placeholder:text-slate-500"
+                  >
+                </div>
+
+                <!-- Move & Resonance Link Buttons -->
+                <div class="mt-3 pt-2.5 border-t border-white/10 space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <button
+                      onclick="app.movePlayerCard(${idx}, -1)"
+                      ${isFirst ? 'disabled' : ''}
+                      class="flex-1 py-2 px-2 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition btn-tactile ${
+                        isFirst
+                          ? 'bg-white/5 text-slate-600 cursor-not-allowed'
+                          : 'bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/35'
+                      }"
+                    >
+                      <i class="fa-solid fa-arrow-left"></i>
+                      <span>小さい方へ</span>
+                    </button>
+
+                    <button
+                      onclick="app.movePlayerCard(${idx}, 1)"
+                      ${isLast ? 'disabled' : ''}
+                      class="flex-1 py-2 px-2 rounded-xl font-black text-xs flex items-center justify-center gap-1 transition btn-tactile ${
+                        isLast
+                          ? 'bg-white/5 text-slate-600 cursor-not-allowed'
+                          : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-400/35'
+                      }"
+                    >
+                      <span>大きい方へ</span>
+                      <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                  </div>
+
+                  ${!isLast ? `
+                    <button onclick="app.toggleResonanceLink(${idx})" class="w-full py-2 px-3 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 transition btn-tactile ${
+                      isLinkedRight
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-alch-bg shadow-sm'
+                        : 'bg-alch-panel hover:bg-amber-500/20 text-amber-300 border border-amber-500/35'
+                    }">
+                      <i class="fa-solid fa-link"></i>
+                      <span>${isLinkedRight ? `解除（${this.escapeHtml(players[idx + 1].name)}とロック中）` : `次の人（${this.escapeHtml(players[idx + 1].name)}）と共鳴リンク`}</span>
+                    </button>
+                  ` : `
+                    <div class="py-1.5 text-center text-[11px] font-bold text-slate-500">
+                      100に最も近いポジション
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="space-y-4 sm:space-y-5 animate-pop-in">
+            ${this.renderTopicBanner(true)}
+
+            <!-- Alchemy Tools Bar -->
+            <div class="bg-alch-surface rounded-2xl p-3.5 sm:px-5 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 shadow-mystic">
+              <div class="flex items-center gap-3 text-center md:text-left">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center shrink-0">
+                  <i class="fa-solid fa-arrow-down-1-9"></i>
+                </div>
+                <div>
+                  <div class="font-black text-sm text-white">1位（最小）→ ${players.length}位（最大）の昇順に並べよう！</div>
+                  <div class="text-[11px] text-slate-400">
+                    ${this.state.enableLensMode ? '誰がどの「価値観レンズ」か推理しつつ、' : ''}数字差が10以内のペアには「共鳴リンク」を繋ごう！
+                  </div>
+                </div>
+              </div>
+
+              ${this.state.enableScaleCrystal ? `
+                <button onclick="app.openTruthScaleModal()" class="w-full md:w-auto px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition btn-tactile shrink-0 ${
+                  this.state.crystalUsed
+                    ? 'bg-slate-800 text-cyan-300 border border-cyan-500/40'
+                    : 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-alch-bg shadow-emerald-glow'
+                }">
+                  <i class="fa-solid fa-scale-balanced"></i>
+                  <span>${this.state.crystalUsed ? '真実の天秤（啓示を再確認）' : '真実の天秤を使う（残り1回）'}</span>
+                </button>
+              ` : ''}
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              ${cardsHtml}
+            </div>
+
+            <!-- Confirm & Open Ritual Button -->
+            <div class="pt-2 pb-6 max-w-xl mx-auto">
+              <button onclick="app.confirmStartReveal()" class="w-full py-4 sm:py-5 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 hover:brightness-105 text-alch-bg font-black text-lg sm:text-xl shadow-gold-glow btn-tactile flex items-center justify-center gap-3">
+                <i class="fa-solid fa-wand-sparkles"></i>
+                <span>調合完了！カードをオープンする</span>
+              </button>
+            </div>
+          </div>
+        `;
+      },
+
+      // --------------------------------------------------------------------------
+      // VIEW 4: GRAND REVEAL & DISCREPANCY VERIFICATION BOARD
+      // --------------------------------------------------------------------------
+      renderRevealView() {
+        const players = this.state.players;
+        const res = this.state.revealResult;
+        const isRevealing = this.state.isRevealing;
+
+        const revealCardsHtml = players.map((p, idx) => {
+          const isFlipped = idx < this.state.revealStep;
+          const isMistake = !isRevealing && res.mistakeIndices.includes(idx);
+          const isLinkedLeft = this.state.resonanceLinkIdx === idx - 1;
+          const isLinkedRight = this.state.resonanceLinkIdx === idx;
+          const isLinked = isLinkedLeft || isLinkedRight;
+
+          return `
+            <div id="reveal-wrapper-${idx}" class="flex flex-col">
+              <div class="perspective-1000 h-64 sm:h-72 w-full">
+                <div id="reveal-card-${idx}" class="flip-card-inner ${isFlipped ? 'is-flipped' : ''}">
+                  <!-- Card Back -->
+                  <div class="flip-card-front alchemy-card-back border-2 ${isLinked ? 'border-amber-400' : 'border-white/20'} shadow-mystic p-4 flex flex-col items-center justify-center text-white text-center">
+                    <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-num font-black text-xs mb-2">
+                      予想 ${idx + 1}位
+                    </span>
+                    <div class="font-black text-lg mb-1">${this.escapeHtml(p.name)}</div>
+                    ${p.hint ? `<div class="mt-2 px-3 py-1.5 rounded-xl bg-white/10 text-xs font-bold text-slate-200 max-w-full truncate">「${this.escapeHtml(p.hint)}」</div>` : ''}
+                    <div class="mt-4 text-amber-400/50 font-display text-xs tracking-widest">SEALED</div>
+                  </div>
+
+                  <!-- Card Front (Parchment Revealed Card) -->
+                  <div class="flip-card-back parchment-card border-4 ${
+                    isMistake
+                      ? 'border-rose-500 shadow-rose-glow'
+                      : isLinked && !isRevealing && res.resonanceHit
+                        ? 'border-amber-400 resonance-glow'
+                        : 'border-emerald-500/80 shadow-emerald-glow'
+                  } p-4 flex flex-col items-center justify-between text-center relative overflow-hidden">
+                    ${isMistake ? `
+                      <div class="absolute top-0 inset-x-0 bg-rose-600 text-white text-[10px] font-black py-0.5 tracking-wider">
+                        <i class="fa-solid fa-burst mr-1"></i>不協和音（順番逆転！）
+                      </div>
+                    ` : `
+                      <div class="absolute top-0 inset-x-0 bg-emerald-600 text-white text-[10px] font-black py-0.5 tracking-wider">
+                        <i class="fa-solid fa-check mr-1"></i>調和（OK）
+                      </div>
+                    `}
+
+                    <div class="w-full flex items-center justify-between mt-3">
+                      <span class="px-2 py-0.5 rounded-lg bg-amber-900/15 text-amber-950 font-num font-black text-xs">
+                        ${idx + 1}位
+                      </span>
+                      <span class="font-black text-sm text-slate-900 truncate max-w-[135px]">
+                        ${this.escapeHtml(p.name)}
+                      </span>
+                    </div>
+
+                    <div class="my-auto">
+                      <div class="font-num font-black text-6xl ${isMistake ? 'text-rose-600' : 'text-slate-900'} tracking-tighter">
+                        ${p.number}
+                      </div>
+                      ${this.state.enableLensMode ? `
+                        <div class="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${p.lens.parchmentBadge}">
+                          <i class="fa-solid ${p.lens.icon}"></i>
+                          <span>${this.escapeHtml(p.lens.name.replace('レンズ', ''))}</span>
+                        </div>
+                      ` : ''}
+                    </div>
+
+                    <div class="w-full px-2.5 py-1.5 rounded-xl bg-white/75 border border-amber-900/15 text-xs font-bold text-slate-800 truncate">
+                      ${p.hint ? `「${this.escapeHtml(p.hint)}」` : '<span class="text-slate-500">（口頭のみで表現）</span>'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Verdict & Verification Board
+        let verdictSection = '';
+        if (!isRevealing) {
+          const isFinalRound = this.state.currentRound >= this.state.totalRounds;
+          const sortedPlayers = [...players].sort((a, b) => a.number - b.number);
+
+          const verificationRows = sortedPlayers.map((p, sIdx) => {
+            return `
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-2xl bg-alch-bg/90 border border-white/10 text-left">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-9 h-9 rounded-xl parchment-card border-2 border-amber-500 text-slate-900 font-num font-black text-sm flex items-center justify-center shrink-0">
+                    ${p.number}
+                  </span>
+                  <div>
+                    <div class="font-black text-sm text-white flex flex-wrap items-center gap-1.5">
+                      <span>${this.escapeHtml(p.name)}</span>
+                      ${this.state.enableLensMode ? `
+                        <span class="text-[11px] px-2 py-0.5 rounded-full border ${p.lens.badgeClass}">
+                          <i class="fa-solid ${p.lens.icon} mr-1"></i>${this.escapeHtml(p.lens.name)}
+                        </span>
+                      ` : ''}
+                    </div>
+                    <div class="text-xs text-slate-300 mt-0.5">
+                      ${p.hint ? `例えワード：「<span class="text-amber-200 font-bold">${this.escapeHtml(p.hint)}</span>」` : '<span class="text-slate-500">（例えワード未入力）</span>'}
+                    </div>
+                  </div>
+                </div>
+                <div class="text-[11px] font-bold text-emerald-300 sm:text-right shrink-0">
+                  正解の昇順 ${sIdx + 1}番目
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          verdictSection = `
+            <div class="rounded-3xl p-5 sm:p-6 shadow-mystic border-2 ${
+              res.success
+                ? 'bg-gradient-to-br from-emerald-950 via-alch-surface to-teal-950 border-emerald-400/65'
+                : 'bg-gradient-to-br from-rose-950 via-alch-surface to-indigo-950 border-rose-400/65'
+            } text-center animate-pop-in space-y-5">
+              <div>
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full ${
+                  res.success ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' : 'bg-rose-500/20 text-rose-300 border-rose-400/40'
+                } border text-xs font-black mb-2">
+                  <span>今回シンクロ率：${res.synchroRate}%</span>
+                  <span>/</span>
+                  <span>獲得：+${res.roundPoints} pt</span>
+                </div>
+
+                <h3 class="text-2xl sm:text-3xl font-black text-white mb-1">
+                  ${res.success ? '✨ 価値観調合・大成功！ ✨' : '💥 不協和音… 価値観のすれ違い！'}
+                </h3>
+
+                ${this.state.resonanceLinkIdx !== null ? `
+                  <div class="mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl text-xs font-black ${
+                    res.resonanceHit
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-alch-bg shadow-gold-glow'
+                      : 'bg-white/10 text-slate-300 border border-white/15'
+                  }">
+                    <i class="fa-solid fa-link"></i>
+                    <span>
+                      ${res.resonanceHit
+                        ? `PERFECT RESONANCE！（完全共鳴達成・差 ${res.resonanceDiff}）+50pt ボーナス！`
+                        : `共鳴リンク不発（数字の差：${res.resonanceDiff} / 昇順かつ差10以内ならず）`
+                      }
+                    </span>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- 価値観ズレ検証ボード -->
+              <div class="bg-alch-panel/75 rounded-2xl p-4 border border-white/10">
+                <div class="text-xs font-black text-amber-300 mb-3 flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <span>価値観ズレ検証ボード（実際の数字 ＆ レンズ正体 ＆ 例えワード）</span>
+                </div>
+                <div class="space-y-2 max-w-2xl mx-auto">
+                  ${verificationRows}
+                </div>
+              </div>
+
+              <div>
+                <button onclick="app.nextRoundOrFinish()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-400 text-alch-bg font-black text-base sm:text-lg shadow-gold-glow btn-tactile inline-flex items-center gap-2">
+                  <span>${isFinalRound ? '最終称号・シンクロ診断へ進む' : `次のラウンド（R${this.state.currentRound + 1}/${this.state.totalRounds}）へ`}</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          verdictSection = `
+            <div class="bg-alch-surface border border-amber-500/35 rounded-3xl p-4 sm:p-5 text-center shadow-mystic flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div class="font-black text-sm sm:text-lg text-amber-300 flex items-center gap-2.5">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>魔導陣起動中… 左から順番にカードを開示しています…</span>
+              </div>
+              <button onclick="app.skipRevealAnimation()" class="px-4 py-2 rounded-xl bg-alch-panel hover:bg-indigo-900 text-slate-200 border border-white/15 text-xs font-bold shrink-0">
+                <i class="fa-solid fa-forward-fast mr-1"></i>一括オープン
+              </button>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="space-y-4 sm:space-y-5">
+            ${this.renderTopicBanner(false)}
+
+            ${verdictSection}
+
+            <!-- Revealed Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-6">
+              ${revealCardsHtml}
+            </div>
+          </div>
+        `;
+      },
+
+      // --------------------------------------------------------------------------
+      // VIEW 5: FINAL CAMPAIGN RESULT & TEAM TITLE DIAGNOSIS
+      // --------------------------------------------------------------------------
+      renderFinalResultView() {
+        const diag = this.getFinalTeamDiagnosis();
+        const history = this.state.roundHistory;
+
+        const historyRows = history.map(h => `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 p-3 rounded-2xl bg-alch-bg/85 border border-white/10 text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 font-num font-black shrink-0">R${h.round}</span>
+              <span class="font-bold text-slate-100 truncate">${this.escapeHtml(h.topicTitle)}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              ${h.resonanceHit ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-black"><i class="fa-solid fa-link mr-1"></i>完全共鳴</span>' : ''}
+              <span class="px-2 py-0.5 rounded-full font-black text-[11px] ${h.success ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+                ${h.success ? '成功' : 'ズレ発生'}
+              </span>
+              <span class="font-num font-black text-sm text-white w-12 text-right">${h.synchroRate}%</span>
+            </div>
+          </div>
+        `).join('');
+
+        return `
+          <div class="max-w-3xl w-full mx-auto space-y-5 animate-pop-in pb-8">
+            <div class="bg-gradient-to-br from-alch-surface via-alch-panel to-indigo-950 rounded-3xl p-6 sm:p-8 shadow-mystic border-2 border-amber-400/50 text-center relative overflow-hidden">
+              <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-emerald-500 text-alch-bg flex items-center justify-center text-3xl sm:text-4xl mx-auto mb-3 shadow-gold-glow">
+                <i class="fa-solid ${diag.teamTitle.icon}"></i>
+              </div>
+
+              <div class="font-display text-xs tracking-[0.25em] text-amber-300 font-bold">FINAL ALCHEMY RANK</div>
+              <h2 class="text-2xl sm:text-4xl font-black ${diag.teamTitle.color} mt-1 mb-2 leading-tight">
+                【${diag.teamTitle.title}】
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-200 max-w-xl mx-auto leading-relaxed mb-6">
+                ${diag.teamTitle.desc}
+              </p>
+
+              <!-- Key Metrics -->
+              <div class="grid grid-cols-3 gap-2.5 sm:gap-4 mb-5">
+                <div class="p-3 sm:p-4 rounded-2xl bg-alch-bg/90 border border-amber-500/35">
+                  <div class="text-[10px] sm:text-xs font-bold text-slate-400">平均シンクロ率</div>
+                  <div class="font-num font-black text-2xl sm:text-4xl text-amber-300 mt-0.5">${diag.avgSynchro}%</div>
+                </div>
+                <div class="p-3 sm:p-4 rounded-2xl bg-alch-bg/90 border border-emerald-500/35">
+                  <div class="text-[10px] sm:text-xs font-bold text-slate-400">調合成功数</div>
+                  <div class="font-num font-black text-2xl sm:text-4xl text-emerald-400 mt-0.5">${diag.successCount}/${diag.totalRounds}</div>
+                </div>
+                <div class="p-3 sm:p-4 rounded-2xl bg-alch-bg/90 border border-cyan-500/35">
+                  <div class="text-[10px] sm:text-xs font-bold text-slate-400">総合スコア</div>
+                  <div class="font-num font-black text-2xl sm:text-4xl text-cyan-300 mt-0.5">${this.state.totalScore}</div>
+                </div>
+              </div>
+
+              <!-- Best Resonance Pair -->
+              <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-400/35 text-xs sm:text-sm font-bold text-amber-200 flex items-center justify-center gap-2 mb-6">
+                <i class="fa-solid fa-link text-amber-400"></i>
+                <span>ベスト共鳴ペア：<strong>${this.escapeHtml(diag.bestPairText)}</strong></span>
+              </div>
+
+              <!-- Round History -->
+              <div class="text-left space-y-2 mb-6">
+                <div class="text-xs font-black text-slate-300 px-1">
+                  <i class="fa-solid fa-scroll mr-1.5 text-amber-400"></i>全ラウンド調合記録
+                </div>
+                ${historyRows}
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="space-y-3">
+                <button onclick="app.copyShareText()" class="w-full py-3.5 rounded-2xl bg-alch-bg hover:bg-indigo-950 border border-amber-400/50 text-amber-300 font-black text-sm sm:text-base flex items-center justify-center gap-2 transition btn-tactile">
+                  <i class="fa-solid fa-copy"></i>
+                  <span>診断結果をコピーしてシェアする</span>
+                </button>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button onclick="app.startGame()" class="py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 text-alch-bg font-black text-base shadow-gold-glow btn-tactile flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>同じメンバーでもう一度！</span>
+                  </button>
+                  <button onclick="app.resetToSetup()" class="py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-base transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>設定・メンバー変更へ</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
+  </script>
+</body>
+</html>
