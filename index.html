@@ -2,13 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>シンクロ・アルケミスト 〜価値観調合の儀〜</title>
-  <!-- スマホのホーム画面追加用アイコン設定 -->
-<link rel="icon" type="image/png" sizes="192x192" href="./icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="シンクロ錬金">
+  <!-- PWA & Home Screen Icon Settings -->
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="シンクロ錬金">
+  <meta name="theme-color" content="#080C1A">
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Cinzel, Noto Sans JP & Inter -->
@@ -226,6 +228,11 @@
           <span class="hidden sm:inline">魔導書（ルール）</span>
         </button>
 
+        <button onclick="app.openPwaInstallModal()" class="px-2.5 py-2 sm:px-3 sm:py-1.5 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-cyan-400/25 text-cyan-300 text-xs font-bold flex items-center gap-1.5 transition" title="ホーム画面に追加">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <span class="hidden md:inline">アプリ化</span>
+        </button>
+
         <button id="sound-toggle-btn" onclick="sound.toggleMute()" class="px-2.5 py-2 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-indigo-400/25 text-emerald-400 text-xs sm:text-sm transition flex items-center gap-1" title="効果音 ON/OFF">
           <i id="sound-icon" class="fa-solid fa-volume-high"></i>
         </button>
@@ -304,92 +311,68 @@
         gain.connect(this.ctx.destination);
 
         osc.start(now);
-        osc.stop(now + duration + 0.03);
+        osc.stop(now + duration);
       }
 
       playTap() {
-        this.playTone(640, 'sine', 0.07, 0, 0.1);
+        this.playTone(520, 'sine', 0.08, 0, 0.09);
       }
 
-      // 水晶共鳴音
-      playCrystalChime() {
-        this.playTone(880, 'sine', 0.3, 0, 0.12);
-        this.playTone(1318.51, 'sine', 0.4, 0.06, 0.11);
-        this.playTone(1760, 'triangle', 0.45, 0.12, 0.07);
-      }
-
-      // カード並び替え音
       playSwap() {
-        this.playTone(460, 'triangle', 0.08, 0, 0.12);
-        this.playTone(690, 'triangle', 0.1, 0.05, 0.12);
+        this.playTone(340, 'triangle', 0.09, 0, 0.11);
+        this.playTone(460, 'triangle', 0.1, 0.05, 0.11);
       }
 
-      // 共鳴リンク接続音
+      playCrystalChime() {
+        this.playTone(880, 'sine', 0.25, 0, 0.1);
+        this.playTone(1318.5, 'sine', 0.35, 0.06, 0.08);
+      }
+
       playResonanceLock() {
-        this.playTone(587.33, 'sine', 0.18, 0, 0.14);
-        this.playTone(880, 'triangle', 0.24, 0.07, 0.14);
-        this.playTone(1174.66, 'sine', 0.35, 0.14, 0.12);
+        this.playTone(587.33, 'triangle', 0.2, 0, 0.12);
+        this.playTone(880, 'sine', 0.35, 0.08, 0.12);
       }
 
-      // 天秤の傾き＆判定音
       playScaleTilt(isAscending) {
-        // 揺れる金属音
-        this.playTone(720, 'sine', 0.15, 0, 0.1);
-        this.playTone(680, 'sine', 0.15, 0.14, 0.1);
         if (isAscending) {
-          this.playTone(523.25, 'sine', 0.22, 0.32, 0.15);
-          this.playTone(659.25, 'sine', 0.22, 0.42, 0.15);
-          this.playTone(783.99, 'triangle', 0.4, 0.52, 0.16);
+          this.playTone(440, 'sine', 0.18, 0, 0.12);
+          this.playTone(554.37, 'sine', 0.22, 0.12, 0.12);
+          this.playTone(659.25, 'sine', 0.3, 0.24, 0.12);
         } else {
-          this.playTone(392.00, 'triangle', 0.22, 0.32, 0.15);
-          this.playTone(311.13, 'sawtooth', 0.4, 0.46, 0.13);
+          this.playTone(440, 'sawtooth', 0.2, 0, 0.09);
+          this.playTone(311.13, 'sawtooth', 0.35, 0.15, 0.1);
         }
       }
 
-      // 禁句アラート音
-      playTabooAlert() {
-        this.playTone(440, 'square', 0.12, 0, 0.1);
-        this.playTone(349.23, 'square', 0.18, 0.1, 0.1);
-      }
-
-      // カードめくり音（成功時は高く澄んだ音、失敗時はクリスタル砕け音）
-      playCardFlip(index = 0, isMistake = false) {
+      playCardFlip(idx, isMistake) {
         if (isMistake) {
-          // クリスタル砕け音（不協和音＋高周波ノイズ風）
-          this.playTone(233.08, 'sawtooth', 0.28, 0, 0.16);
-          this.playTone(220.00, 'sawtooth', 0.32, 0.04, 0.16);
-          this.playTone(146.83, 'square', 0.4, 0.1, 0.15);
-          this.playTone(1480, 'triangle', 0.08, 0.02, 0.12);
-          this.playTone(1120, 'triangle', 0.1, 0.07, 0.12);
+          this.playTone(190, 'sawtooth', 0.32, 0, 0.14);
+          this.playTone(145, 'sawtooth', 0.4, 0.12, 0.14);
         } else {
-          const base = 440 + index * 46;
-          this.playTone(base, 'triangle', 0.15, 0, 0.14);
-          this.playTone(base * 1.5, 'sine', 0.28, 0.05, 0.13);
+          const baseFreq = 440 * Math.pow(1.08, idx);
+          this.playTone(baseFreq, 'triangle', 0.22, 0, 0.13);
+          this.playTone(baseFreq * 1.5, 'sine', 0.25, 0.05, 0.09);
         }
       }
 
-      // ファンファーレ
       playFanfare() {
-        const chord = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
-        chord.forEach((freq, i) => {
-          this.playTone(freq, 'sine', 0.45, i * 0.07, 0.14);
-          this.playTone(freq * 0.5, 'triangle', 0.45, i * 0.07, 0.08);
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((f, i) => {
+          this.playTone(f, 'triangle', 0.28, i * 0.09, 0.13);
         });
       }
 
-      // 完全共鳴ボーナス音
       playPerfectResonance() {
-        const notes = [1046.50, 1318.51, 1567.98, 2093.00];
-        notes.forEach((freq, i) => {
-          this.playTone(freq, 'sine', 0.38, i * 0.06, 0.14);
+        const notes = [659.25, 830.61, 987.77, 1318.51];
+        notes.forEach((f, i) => {
+          this.playTone(f, 'sine', 0.35, i * 0.07, 0.12);
         });
       }
 
-      // ラウンド失敗時の不協和音
       playDiscord() {
-        this.playTone(220, 'sawtooth', 0.25, 0, 0.14);
-        this.playTone(185, 'sawtooth', 0.3, 0.15, 0.14);
-        this.playTone(138.59, 'sawtooth', 0.48, 0.3, 0.15);
+        this.playTone(220, 'sawtooth', 0.28, 0, 0.13);
+        this.playTone(185, 'sawtooth', 0.35, 0.14, 0.13);
+        this.playTone(138.59, 'sawtooth', 0.5, 0.28, 0.14);
       }
     }
 
@@ -397,117 +380,220 @@
 
     /**
      * ============================================================================
-     * 2. ALCHEMY DATA: 10 LENSES, 12 TABOOS, 90 TOPICS, TEAM TITLES
+     * 2. ALCHEMY GAME DATABASES
      * ============================================================================
      */
-
     const ALCHEMIST_PRESET_NAMES = [
       '賢者ソフィア', '錬金術師レオ', '星詠みルナ', '紅蓮のカイ',
       '翠玉のミア', '蒼穹のノア', '黄金のアルス', '銀月のセレス',
-      '秘術師ゼノ', '薬草師リリィ', '古文書官ユウ', '天秤のハル'
+      '紫電のジン', '白銀のイリス', '琥珀のハルト', '宵闇のノクス'
     ];
 
-    // 1. 価値観レンズ（全10種・演じ方ヒント付き）
-    const VALUE_LENSES = [
+    // 1. 共通・価値観レンズ（全員共有・全10種）
+    const SHARED_VALUE_LENSES = [
       {
-        id: 'sage',
-        name: '純粋な賢者レンズ',
-        icon: 'fa-sun',
+        id: 'kid',
+        name: '小学3年生の視点レンズ',
+        icon: 'fa-child-reaching',
+        color: 'text-sky-300',
+        badgeClass: 'bg-sky-500/20 border-sky-400/40 text-sky-300',
+        desc: '全員が「無邪気な小学3年生」になりきった基準で1〜100を判定！',
+        tip: 'お小遣い・給食・夏休みなど、子供目線のワクワクや絶望度で揃えよう！'
+      },
+      {
+        id: 'oyaji',
+        name: '昭和の頑固オヤジ視点レンズ',
+        icon: 'fa-mug-hot',
+        color: 'text-orange-300',
+        badgeClass: 'bg-orange-500/20 border-orange-400/40 text-orange-300',
+        desc: '全員が「根性と渋さを重んじる昭和の頑固オヤジ」の基準で判定！',
+        tip: '「背中で語る」「熱燗」「最近の若いもんは…」など渋い男気で揃えよう！'
+      },
+      {
+        id: 'billionaire',
+        name: '資産1000億セレブ視点レンズ',
+        icon: 'fa-crown',
+        color: 'text-yellow-300',
+        badgeClass: 'bg-yellow-500/20 border-yellow-400/40 text-yellow-300',
+        desc: '全員が「桁違いの金銭感覚を持つ億万長者」のスケールで判定！',
+        tip: '「油田を買う」「自家用ジェット」など金銭感覚をバグらせて揃えよう！'
+      },
+      {
+        id: 'chuuni',
+        name: '闇の厨二病視点レンズ',
+        icon: 'fa-eye',
+        color: 'text-purple-300',
+        badgeClass: 'bg-purple-500/20 border-purple-400/40 text-purple-300',
+        desc: '全員が「封印されし魔力と闇のカッコよさ」を基準に判定！',
+        tip: '黒炎竜・禁忌の魔導書・世界の裏組織など壮大な厨二設定で揃えよう！'
+      },
+      {
+        id: 'cat',
+        name: '気まぐれ飼い猫視点レンズ',
+        icon: 'fa-cat',
+        color: 'text-teal-300',
+        badgeClass: 'bg-teal-500/20 border-teal-400/40 text-teal-300',
+        desc: '全員が「お昼寝とおやつ最優先の飼い猫」の快適さ基準で判定！',
+        tip: '日向ぼっこ・ちゅ〜る・段ボール箱など猫にとっての幸福度で揃えよう！'
+      },
+      {
+        id: 'samurai',
+        name: '戦国武将視点レンズ',
+        icon: 'fa-khanda',
+        color: 'text-red-300',
+        badgeClass: 'bg-red-500/20 border-red-400/40 text-red-300',
+        desc: '全員が「天下統一と武士道を重んじる戦国武将」の基準で判定！',
+        tip: '一番槍の功名・城攻め・主君への忠義など武士らしい基準で揃えよう！'
+      },
+      {
+        id: 'maiden',
+        name: 'ガチ恋乙女視点レンズ',
+        icon: 'fa-heart-pulse',
+        color: 'text-pink-300',
+        badgeClass: 'bg-pink-500/20 border-pink-400/40 text-pink-300',
+        desc: '全員が「恋のときめきとロマンス最優先の乙女脳」で判定！',
+        tip: '好きな人からの既読・壁ドン・運命の出会いなどキュン度で揃えよう！'
+      },
+      {
+        id: 'biz',
+        name: '敏腕ビジネスマン視点レンズ',
+        icon: 'fa-briefcase',
+        color: 'text-cyan-300',
+        badgeClass: 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300',
+        desc: '全員が「コスパ・タイパ・成果主義の敏腕ビジネスマン」基準で判定！',
+        tip: '生産性・投資対効果・大型商談成立などビジネス価値で揃えよう！'
+      },
+      {
+        id: 'otaku',
+        name: '限界オタク視点レンズ',
+        icon: 'fa-star-half-stroke',
+        color: 'text-fuchsia-300',
+        badgeClass: 'bg-fuchsia-500/20 border-fuchsia-400/40 text-fuchsia-300',
+        desc: '全員が「推しの尊さと供給に命をかける限界オタク」基準で判定！',
+        tip: '神ファンサ・最前列当選・尊死などオタクの感情爆発度で揃えよう！'
+      },
+      {
+        id: 'alien',
+        name: '宇宙人調査員視点レンズ',
+        icon: 'fa-user-astronaut',
+        color: 'text-emerald-300',
+        badgeClass: 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300',
+        desc: '全員が「地球文化を初めて観察する宇宙人調査員」の視点で判定！',
+        tip: '地球人の不思議な習慣・文明レベル・未知のテクノロジー基準で揃えよう！'
+      }
+    ];
+
+    // 1-B. 秘密の視点ロール（キャラクター枠・全10種）
+    const SECRET_CHARACTER_ROLES = [
+      {
+        id: 'self',
+        isParticipant: false,
+        name: '素のあなた（いつもの自分）',
+        icon: 'fa-user-check',
         color: 'text-amber-300',
         badgeClass: 'bg-amber-500/20 border-amber-400/40 text-amber-300',
         parchmentBadge: 'bg-amber-800/15 border-amber-700/40 text-amber-900',
-        desc: '通常のあなた自身の素直な感覚・価値観で例えてください。',
-        tip: '演じ方ヒント：ひねりなしで自分のリアルな感覚をそのまま例えよう！'
+        desc: '他の誰でもない、あなた自身のリアルな感覚で例えてください！',
+        tip: '演じ方ヒント：変にキャラを作らず、いつもの自分の感覚そのままに例えよう！'
       },
       {
         id: 'kid',
-        name: '小学3年生レンズ',
+        isParticipant: false,
+        name: '小学3年生ロール',
         icon: 'fa-child-reaching',
         color: 'text-sky-300',
         badgeClass: 'bg-sky-500/20 border-sky-400/40 text-sky-300',
         parchmentBadge: 'bg-sky-800/15 border-sky-700/40 text-sky-900',
-        desc: '無邪気な小学3年生になったつもりで、お小遣いや学校目線の基準で例える！',
-        tip: '演じ方ヒント：「お小遣い500円」「給食の揚げパン」「夏休みの宿題」など子供目線で！'
+        desc: '無邪気な小学3年生になりきって例える！',
+        tip: '演じ方ヒント：お小遣い・給食・夏休みの宿題など子供目線の基準で例えよう！'
       },
       {
         id: 'oyaji',
-        name: '昭和の頑固オヤジレンズ',
+        isParticipant: false,
+        name: '昭和の頑固オヤジロール',
         icon: 'fa-mug-hot',
         color: 'text-orange-300',
         badgeClass: 'bg-orange-500/20 border-orange-400/40 text-orange-300',
         parchmentBadge: 'bg-orange-800/15 border-orange-700/40 text-orange-900',
-        desc: '根性・昔気質・渋さを重んじる昭和の頑固オヤジの基準で例える！',
-        tip: '演じ方ヒント：「最近の若いもんは…」「黙って背中で語る」「晩酌の熱燗」など渋く例えよう！'
+        desc: '根性と渋さを重んじる昭和の頑固オヤジになりきって例える！',
+        tip: '演じ方ヒント：「黙って背中で語る」「晩酌の熱燗」など渋い基準で例えよう！'
       },
       {
         id: 'billionaire',
-        name: '億万長者セレブレンズ',
+        isParticipant: false,
+        name: '億万長者セレブロール',
         icon: 'fa-crown',
         color: 'text-yellow-300',
         badgeClass: 'bg-yellow-500/20 border-yellow-400/40 text-yellow-300',
         parchmentBadge: 'bg-yellow-800/15 border-yellow-700/40 text-yellow-900',
-        desc: '資産1000億円の桁違いな金銭感覚＆スケール感で例える！',
-        tip: '演じ方ヒント：「自家用ジェット」「油田を1つ買う」「端数の1000万円」などスケールをバグらせよう！'
+        desc: '資産1000億円の桁違いな金銭感覚になりきって例える！',
+        tip: '演じ方ヒント：「自家用ジェット」「油田を1つ買う」などスケール大きめに例えよう！'
       },
       {
         id: 'chuuni',
-        name: '闇の厨二病レンズ',
+        isParticipant: false,
+        name: '闇の厨二病ロール',
         icon: 'fa-eye',
         color: 'text-purple-300',
         badgeClass: 'bg-purple-500/20 border-purple-400/40 text-purple-300',
         parchmentBadge: 'bg-purple-800/15 border-purple-700/40 text-purple-900',
-        desc: '中二設定・封印されし魔力・カッコよさ重視の闇の基準で例える！',
-        tip: '演じ方ヒント：「右腕の黒炎竜」「世界の裏の組織」「禁忌の魔導書」など壮大に語ろう！'
+        desc: '封印されし魔力と闇のカッコよさ重視の厨二病になりきって例える！',
+        tip: '演じ方ヒント：「右腕の黒炎竜」「禁忌の魔導書」など壮大な設定で語ろう！'
       },
       {
         id: 'cat',
-        name: '気まぐれ飼い猫レンズ',
+        isParticipant: false,
+        name: '気まぐれ飼い猫ロール',
         icon: 'fa-cat',
         color: 'text-teal-300',
         badgeClass: 'bg-teal-500/20 border-teal-400/40 text-teal-300',
         parchmentBadge: 'bg-teal-800/15 border-teal-700/40 text-teal-900',
-        desc: 'マイペース・快適さ・お昼寝・おやつ重視の猫目線で例える！',
-        tip: '演じ方ヒント：「日向ぼっこ」「ちゅ〜る」「段ボール箱」「飼い主の膝の上」など快適さ基準で！'
+        desc: 'お昼寝とおやつ最優先のマイペースな飼い猫になりきって例える！',
+        tip: '演じ方ヒント：「日向ぼっこ」「ちゅ〜る」「段ボール箱」など快適さ基準で！'
       },
       {
         id: 'samurai',
-        name: '戦国武将レンズ',
+        isParticipant: false,
+        name: '戦国武将ロール',
         icon: 'fa-khanda',
         color: 'text-red-300',
         badgeClass: 'bg-red-500/20 border-red-400/40 text-red-300',
         parchmentBadge: 'bg-red-800/15 border-red-700/40 text-red-900',
-        desc: '天下統一・武士道・名誉と忠義を重んじる戦国武将の基準で例える！',
-        tip: '演じ方ヒント：「一番槍の功名」「城を落とす」「主君への忠義」など武士らしい例えで！'
+        desc: '天下統一と武士道を重んじる戦国武将になりきって例える！',
+        tip: '演じ方ヒント：「一番槍の功名」「城を落とす」など武士らしい基準で！'
       },
       {
         id: 'maiden',
-        name: 'ガチ恋乙女レンズ',
+        isParticipant: false,
+        name: 'ガチ恋乙女ロール',
         icon: 'fa-heart-pulse',
         color: 'text-pink-300',
         badgeClass: 'bg-pink-500/20 border-pink-400/40 text-pink-300',
         parchmentBadge: 'bg-pink-800/15 border-pink-700/40 text-pink-900',
-        desc: 'すべてを恋愛脳・ときめき・ロマンス基準で考える乙女視点で例える！',
-        tip: '演じ方ヒント：「好きな人からの既読」「運命の出会い」「壁ドン」など恋のときめきで例えよう！'
+        desc: 'すべてを恋愛脳・ときめき基準で考える乙女になりきって例える！',
+        tip: '演じ方ヒント：「好きな人からの既読」「壁ドン」など恋のときめきで例えよう！'
+      },
+      {
+        id: 'otaku',
+        isParticipant: false,
+        name: '限界オタクロール',
+        icon: 'fa-star-half-stroke',
+        color: 'text-fuchsia-300',
+        badgeClass: 'bg-fuchsia-500/20 border-fuchsia-400/40 text-fuchsia-300',
+        parchmentBadge: 'bg-fuchsia-800/15 border-fuchsia-700/40 text-fuchsia-900',
+        desc: '推しの尊さと供給に命をかける限界オタクになりきって例える！',
+        tip: '演じ方ヒント：「神席当選」「推しの供給」「尊死」などオタクの熱量で！'
       },
       {
         id: 'ai',
-        name: '効率厨AIレンズ',
+        isParticipant: false,
+        name: '冷徹AIロボットロール',
         icon: 'fa-microchip',
         color: 'text-cyan-300',
         badgeClass: 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300',
         parchmentBadge: 'bg-cyan-800/15 border-cyan-700/40 text-cyan-900',
-        desc: 'コスパ・タイパ・合理性とデータ最優先の冷徹AI基準で例える！',
-        tip: '演じ方ヒント：「処理速度0.01秒」「完全栄養食」「無駄の削減率99%」など合理性で例えよう！'
-      },
-      {
-        id: 'worker',
-        name: '限界社畜レンズ',
-        icon: 'fa-battery-quarter',
-        color: 'text-indigo-300',
-        badgeClass: 'bg-indigo-500/20 border-indigo-400/40 text-indigo-300',
-        parchmentBadge: 'bg-indigo-800/15 border-indigo-700/40 text-indigo-900',
-        desc: '日々の疲労・有給休暇・金曜の夜への渇望を基準に例える！',
-        tip: '演じ方ヒント：「金曜21時の解放感」「月曜朝の絶望」「栄養ドリンク」など労働者の魂で例えよう！'
+        desc: 'コスパ・効率・データ確率のみで判断するAIになりきって例える！',
+        tip: '演じ方ヒント：「処理効率99.8%」「完全栄養食」など合理性のみで例えよう！'
       }
     ];
 
@@ -702,7 +788,9 @@
 
         // Game Options
         totalRounds: 3, // 1 | 3 | 5
-        enableLensMode: true,
+        enableSharedLens: true, // 全員共有・価値観レンズ
+        enableSecretRole: true, // 秘密の視点ロール（参加者なりきり入り）
+        secretRoleMixMode: 'participant_heavy', // 'participant_heavy' | 'participant_only' | 'mixed'
         enableTabooMode: true,
         enableScaleCrystal: true,
 
@@ -714,8 +802,9 @@
 
         // Current Round State
         currentTopic: null,
+        currentSharedLens: null,
         currentTaboo: null,
-        players: [], // { id, name, colorIdx, number, lens, hint }
+        players: [], // { id, name, colorIdx, number, role, hint }
         dealIndex: 0,
         isSecretRevealed: false,
 
@@ -807,25 +896,60 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+              <div class="p-3 rounded-2xl bg-indigo-950/70 border border-cyan-400/30">
+                <div class="font-black text-cyan-300 mb-1"><i class="fa-solid fa-glasses mr-1"></i>① 全員共有・価値観レンズ</div>
+                <p class="text-slate-300">ラウンドごとに「小学3年生視点」「億万長者視点」など<strong>全員共通の基準フィルター</strong>が出題！全員同じ視点で1〜100を揃えよう。</p>
+              </div>
               <div class="p-3 rounded-2xl bg-indigo-950/70 border border-purple-400/30">
-                <div class="font-black text-purple-300 mb-1"><i class="fa-solid fa-glasses mr-1"></i>① 価値観レンズ（全10種）</div>
-                <p class="text-slate-300">秘密の視点ロール（小学3年生・頑固オヤジ・億万長者など）が付与！誰がどの視点で例えているか推理しよう。</p>
+                <div class="font-black text-purple-300 mb-1"><i class="fa-solid fa-masks-theater mr-1"></i>② 秘密の視点ロール（参加者なりきり入り）</div>
+                <p class="text-slate-300">各自に秘密の視点ロールが配布！<strong>「【参加者】〇〇になりきる！」</strong>を引いたら、その人の好みや性格になりきって例えよう！</p>
               </div>
               <div class="p-3 rounded-2xl bg-indigo-950/70 border border-amber-400/30">
-                <div class="font-black text-amber-300 mb-1"><i class="fa-solid fa-link mr-1"></i>② 共鳴リンク（ペア予想）</div>
+                <div class="font-black text-amber-300 mb-1"><i class="fa-solid fa-link mr-1"></i>③ 共鳴リンク（ペア予想）</div>
                 <p class="text-slate-300">隣接する「数字の差が10以内！」と予想するペアを1組リンク！昇順＆差10以内なら<strong>完全共鳴ボーナス</strong>！</p>
               </div>
-              <div class="p-3 rounded-2xl bg-indigo-950/70 border border-cyan-400/30">
-                <div class="font-black text-cyan-300 mb-1"><i class="fa-solid fa-scale-balanced mr-1"></i>③ 真実の天秤（1回限り）</div>
-                <p class="text-slate-300">2枚を選んで天秤にかけると、「左＜右」で正しいか逆転しているかだけを判定してくれます。</p>
-              </div>
               <div class="p-3 rounded-2xl bg-indigo-950/70 border border-rose-400/30">
-                <div class="font-black text-rose-300 mb-1"><i class="fa-solid fa-ban mr-1"></i>④ 禁句（タブー）縛り</div>
-                <p class="text-slate-300">ラウンドごとに「カタカナ禁止」「名詞1単語のみ」などの表現制限が課せられ、白熱度が倍増します！</p>
+                <div class="font-black text-rose-300 mb-1"><i class="fa-solid fa-scale-balanced mr-1"></i>④ 真実の天秤 ＆ 禁句縛り</div>
+                <p class="text-slate-300">1回だけ2枚の大小を判定できる天秤と、「カタカナ禁止」などの表現制限が議論をさらに白熱させます！</p>
               </div>
             </div>
           </div>
           <button onclick="app.closeModal()" class="mt-5 w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">
+            閉じる
+          </button>
+        `);
+      },
+
+      openPwaInstallModal() {
+        sound.playTap();
+        this.openModal(`
+          <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+            <h2 class="text-lg font-black text-cyan-300 flex items-center gap-2">
+              <i class="fa-solid fa-mobile-screen-button"></i> スマホのホーム画面に追加（アプリ化）
+            </h2>
+            <button onclick="app.closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="space-y-3 text-xs text-slate-200 leading-relaxed">
+            <p>このゲームはPWAに対応しています。ホーム画面に追加すると、ブラウザの枠が消えて全画面のゲームアプリとして起動できます。</p>
+            <div class="p-3.5 rounded-2xl bg-alch-panel border border-sky-400/30">
+              <div class="font-black text-sky-300 mb-1"><i class="fa-brands fa-apple mr-1"></i>iPhone / iPad（Safari）</div>
+              <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                <li>画面下部の<strong>共有ボタン（□に↑）</strong>をタップ</li>
+                <li>メニューを下にスクロールして<strong>「ホーム画面に追加」</strong>をタップ</li>
+                <li>右上の<strong>「追加」</strong>をタップして完了！</li>
+              </ol>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-alch-panel border border-emerald-400/30">
+              <div class="font-black text-emerald-300 mb-1"><i class="fa-brands fa-android mr-1"></i>Android（Chrome）</div>
+              <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                <li>画面右上の<strong>メニュー（︙）</strong>をタップ</li>
+                <li><strong>「ホーム画面に追加」</strong>または<strong>「アプリをインストール」</strong>をタップ</li>
+              </ol>
+            </div>
+          </div>
+          <button onclick="app.closeModal()" class="mt-5 w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-alch-bg font-black shadow-btn-3d btn-tactile">
             閉じる
           </button>
         `);
@@ -916,7 +1040,13 @@
         this.render();
       },
 
-      // Topic & Taboo Generators
+      setSecretRoleMixMode(mode) {
+        sound.playTap();
+        this.state.secretRoleMixMode = mode;
+        this.render();
+      },
+
+      // Topic, Shared Lens & Taboo Generators
       pickTopic(categoryKey) {
         if (categoryKey === 'custom') {
           const title = this.state.customTopic.title.trim() || '好きなものの度合い';
@@ -948,9 +1078,24 @@
         return chosen;
       },
 
+      pickRandomSharedLens() {
+        if (!this.state.enableSharedLens) return null;
+        return SHARED_VALUE_LENSES[Math.floor(Math.random() * SHARED_VALUE_LENSES.length)];
+      },
+
       pickRandomTaboo() {
         if (!this.state.enableTabooMode) return null;
         return TABOO_RULES[Math.floor(Math.random() * TABOO_RULES.length)];
+      },
+
+      shuffleSharedLensOnly() {
+        sound.playCrystalChime();
+        if (!this.state.enableSharedLens) return;
+        const currentId = this.state.currentSharedLens ? this.state.currentSharedLens.id : null;
+        const pool = SHARED_VALUE_LENSES.filter(l => l.id !== currentId);
+        this.state.currentSharedLens = pool[Math.floor(Math.random() * pool.length)];
+        this.showToast(`全員共通レンズを「${this.state.currentSharedLens.name}」に変更しました！`, 'info');
+        this.render();
       },
 
       shuffleTopicAndTaboo() {
@@ -960,10 +1105,13 @@
           return;
         }
         this.state.currentTopic = this.pickTopic(this.state.selectedCategory);
+        if (this.state.enableSharedLens) {
+          this.state.currentSharedLens = this.pickRandomSharedLens();
+        }
         if (this.state.enableTabooMode) {
           this.state.currentTaboo = this.pickRandomTaboo();
         }
-        this.showToast('新しいテーマを召喚しました！', 'info');
+        this.showToast('新しいテーマと共通ルールを召喚しました！', 'info');
         this.render();
       },
 
@@ -996,36 +1144,37 @@
           </div>
           <div class="mt-6 flex gap-3">
             <button onclick="app.closeModal()" class="flex-1 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-200 font-bold">キャンセル</button>
-            <button onclick="app.saveCustomTopicFromModal()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">決定する</button>
+            <button onclick="app.saveCustomTopicFromModal()" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">このお題で決定</button>
           </div>
         `);
       },
 
       saveCustomTopicFromModal() {
-        const titleInput = document.getElementById('modal-custom-title').value.trim();
-        const minInput = document.getElementById('modal-custom-min').value.trim();
-        const maxInput = document.getElementById('modal-custom-max').value.trim();
+        const titleEl = document.getElementById('modal-custom-title');
+        const minEl = document.getElementById('modal-custom-min');
+        const maxEl = document.getElementById('modal-custom-max');
+        const title = titleEl ? titleEl.value.trim() : '';
 
-        if (!titleInput) {
+        if (!title) {
           this.showToast('お題タイトルを入力してください', 'warn');
           return;
         }
+
         this.state.customTopic = {
-          title: titleInput,
-          min: minInput || '1：弱い / 少ない',
-          max: maxInput || '100：最強 / 最高'
+          title,
+          min: (minEl && minEl.value.trim()) || '1：弱い / 少ない',
+          max: (maxEl && maxEl.value.trim()) || '100：最強 / 最高'
         };
         this.state.selectedCategory = 'custom';
-        if (this.state.phase !== 'setup') {
-          this.state.currentTopic = this.pickTopic('custom');
-        }
+        this.state.currentTopic = this.pickTopic('custom');
         this.closeModal();
-        this.showToast('カスタムお題を設定しました！', 'success');
+        this.showToast('カスタム調合題をセットしました！', 'success');
         this.render();
       },
 
-      // Deal Unique Numbers (1-100) & Value Lenses
-      dealNumbersAndLenses(count) {
+      // Deal Unique Numbers (1-100) & Secret Perspective Roles (with Participant Impersonation!)
+      dealNumbersAndRoles(playerList) {
+        const count = playerList.length;
         const numPool = Array.from({ length: 100 }, (_, i) => i + 1);
         for (let i = numPool.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -1033,25 +1182,46 @@
         }
         const numbers = numPool.slice(0, count);
 
-        let lenses = [];
-        if (!this.state.enableLensMode) {
-          lenses = Array.from({ length: count }, () => VALUE_LENSES[0]);
-        } else {
-          // Ensure at least 1 'sage' (normal) lens and unique special lenses
-          const specialPool = [...VALUE_LENSES.slice(1)];
-          for (let i = specialPool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [specialPool[i], specialPool[j]] = [specialPool[j], specialPool[i]];
-          }
-          const rawLenses = [VALUE_LENSES[0], ...specialPool.slice(0, count - 1)];
-          for (let i = rawLenses.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [rawLenses[i], rawLenses[j]] = [rawLenses[j], rawLenses[i]];
-          }
-          lenses = rawLenses;
+        if (!this.state.enableSecretRole) {
+          const roles = Array.from({ length: count }, () => SECRET_CHARACTER_ROLES[0]);
+          return { numbers, roles };
         }
 
-        return { numbers, lenses };
+        // Build participant impersonation roles for each player (excluding self)
+        const mode = this.state.secretRoleMixMode; // 'participant_heavy' | 'participant_only' | 'mixed'
+        const roles = playerList.map((me, myIdx) => {
+          const otherPlayers = playerList.filter((_, idx) => idx !== myIdx);
+          const participantRoles = otherPlayers.map(target => ({
+            id: `participant_${target.id}`,
+            isParticipant: true,
+            targetName: target.name,
+            name: `【参加者】${target.name} になりきる！`,
+            icon: 'fa-masks-theater',
+            color: 'text-amber-300',
+            badgeClass: 'bg-gradient-to-r from-amber-500/25 to-rose-500/25 border-amber-400/60 text-amber-200',
+            parchmentBadge: 'bg-rose-800/15 border-rose-700/45 text-rose-950',
+            desc: `参加者「${target.name}」に完全憑依！${target.name}の普段の性格・好み・金銭感覚なら1〜100のどこに置くかで例えよう！`,
+            tip: `演じ方ヒント：本人になりきって「${target.name}なら絶対こう言う！」という感覚で例えよう（自分の数字は秘密のまま！）`
+          }));
+
+          if (mode === 'participant_only' && participantRoles.length > 0) {
+            return participantRoles[Math.floor(Math.random() * participantRoles.length)];
+          }
+
+          if (mode === 'participant_heavy' && participantRoles.length > 0) {
+            // 70% chance to get a fellow participant role, 30% character role
+            if (Math.random() < 0.7) {
+              return participantRoles[Math.floor(Math.random() * participantRoles.length)];
+            }
+            return SECRET_CHARACTER_ROLES[Math.floor(Math.random() * SECRET_CHARACTER_ROLES.length)];
+          }
+
+          // 'mixed': Equal weight pool of participant roles + character roles
+          const combinedPool = [...participantRoles, ...SECRET_CHARACTER_ROLES];
+          return combinedPool[Math.floor(Math.random() * combinedPool.length)];
+        });
+
+        return { numbers, roles };
       },
 
       // Start Campaign
@@ -1075,21 +1245,27 @@
       startNewRound() {
         this.clearRevealTimers();
         const count = this.state.playerCount;
-        const { numbers, lenses } = this.dealNumbersAndLenses(count);
 
-        this.state.players = Array.from({ length: count }, (_, idx) => {
+        const basePlayers = Array.from({ length: count }, (_, idx) => {
           const rawName = (this.state.playerNames[idx] || '').trim();
           return {
             id: `p_${idx}_${Date.now()}`,
             name: rawName || `錬金術師${idx + 1}`,
-            colorIdx: idx % PLAYER_PALETTE.length,
-            number: numbers[idx],
-            lens: lenses[idx],
-            hint: ''
+            colorIdx: idx % PLAYER_PALETTE.length
           };
         });
 
+        const { numbers, roles } = this.dealNumbersAndRoles(basePlayers);
+
+        this.state.players = basePlayers.map((bp, idx) => ({
+          ...bp,
+          number: numbers[idx],
+          role: roles[idx],
+          hint: ''
+        }));
+
         this.state.currentTopic = this.pickTopic(this.state.selectedCategory);
+        this.state.currentSharedLens = this.pickRandomSharedLens();
         this.state.currentTaboo = this.pickRandomTaboo();
         this.state.dealIndex = 0;
         this.state.isSecretRevealed = false;
@@ -1135,16 +1311,16 @@
       openPlayerSecretModal(idx) {
         sound.playTap();
         const player = this.state.players[idx];
-        const lensHtml = this.state.enableLensMode ? `
-          <div class="mt-3 p-3.5 rounded-2xl bg-alch-bg/90 border border-white/15 text-left">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">あなたの価値観レンズ</div>
-            <div class="font-black text-sm ${player.lens.color} mt-0.5 flex items-center gap-1.5">
-              <i class="fa-solid ${player.lens.icon}"></i>
-              <span>${this.escapeHtml(player.lens.name)}</span>
+        const roleHtml = this.state.enableSecretRole ? `
+          <div class="mt-3 p-3.5 rounded-2xl bg-alch-bg/90 border ${player.role.isParticipant ? 'border-amber-400/50' : 'border-white/15'} text-left">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">あなたの秘密の視点ロール</div>
+            <div class="font-black text-sm ${player.role.color} mt-0.5 flex items-center gap-1.5">
+              <i class="fa-solid ${player.role.icon}"></i>
+              <span>${this.escapeHtml(player.role.name)}</span>
             </div>
-            <p class="text-xs text-slate-200 mt-1">${this.escapeHtml(player.lens.desc)}</p>
+            <p class="text-xs text-slate-200 mt-1">${this.escapeHtml(player.role.desc)}</p>
             <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-400/30 text-[11px] text-amber-200 font-bold">
-              <i class="fa-solid fa-lightbulb mr-1 text-amber-400"></i>${this.escapeHtml(player.lens.tip)}
+              <i class="fa-solid fa-lightbulb mr-1 text-amber-400"></i>${this.escapeHtml(player.role.tip)}
             </div>
           </div>
         ` : '';
@@ -1155,16 +1331,16 @@
               <i class="fa-solid fa-eye-slash mr-1"></i>本人以外は絶対に覗かないで！
             </span>
             <h3 class="text-xl font-black text-white mb-1">${this.escapeHtml(player.name)} の秘匿情報</h3>
-            <p class="text-xs text-slate-400 mb-4">下のカードをタップすると数字と視点が開きます</p>
+            <p class="text-xs text-slate-400 mb-4">下のカードをタップすると数字と視点ロールが開きます</p>
 
             <div id="modal-secret-card" onclick="app.toggleModalSecretContent(${idx})" class="cursor-pointer mx-auto max-w-xs rounded-3xl alchemy-card-back border-2 border-amber-400/50 p-6 shadow-mystic transition-transform active:scale-95">
               <i class="fa-solid fa-fingerprint text-4xl text-amber-400 mb-2"></i>
               <div class="font-black text-base text-white">タップして秘匿情報を開く</div>
-              <div class="text-xs text-slate-400 mt-1">数字 ＆ 価値観レンズ</div>
+              <div class="text-xs text-slate-400 mt-1">${this.state.enableSecretRole ? '秘密の数字 ＆ 秘密の視点ロール' : '秘密の数字（1〜100）'}</div>
             </div>
 
-            <div id="modal-lens-container" class="hidden max-w-sm mx-auto">
-              ${lensHtml}
+            <div id="modal-role-container" class="hidden max-w-sm mx-auto">
+              ${roleHtml}
             </div>
 
             <button onclick="app.closeModal()" class="mt-6 w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-alch-bg font-black shadow-btn-3d btn-tactile">
@@ -1176,7 +1352,7 @@
 
       toggleModalSecretContent(idx) {
         const card = document.getElementById('modal-secret-card');
-        const lensBox = document.getElementById('modal-lens-container');
+        const roleBox = document.getElementById('modal-role-container');
         const player = this.state.players[idx];
         if (!card) return;
 
@@ -1184,8 +1360,8 @@
           sound.playTap();
           card.dataset.opened = 'false';
           card.className = 'cursor-pointer mx-auto max-w-xs rounded-3xl alchemy-card-back border-2 border-amber-400/50 p-6 shadow-mystic transition-transform active:scale-95';
-          card.innerHTML = `<i class="fa-solid fa-fingerprint text-4xl text-amber-400 mb-2"></i><div class="font-black text-base text-white">タップして秘匿情報を開く</div><div class="text-xs text-slate-400 mt-1">数字 ＆ 価値観レンズ</div>`;
-          if (lensBox) lensBox.classList.add('hidden');
+          card.innerHTML = `<i class="fa-solid fa-fingerprint text-4xl text-amber-400 mb-2"></i><div class="font-black text-base text-white">タップして秘匿情報を開く</div><div class="text-xs text-slate-400 mt-1">${this.state.enableSecretRole ? '秘密の数字 ＆ 秘密の視点ロール' : '秘密の数字（1〜100）'}</div>`;
+          if (roleBox) roleBox.classList.add('hidden');
         } else {
           sound.playCrystalChime();
           card.dataset.opened = 'true';
@@ -1195,7 +1371,7 @@
             <div class="font-num font-black text-6xl text-slate-900 my-1">${player.number}</div>
             <div class="text-[11px] text-amber-900/75 font-bold">タップして隠す</div>
           `;
-          if (lensBox && this.state.enableLensMode) lensBox.classList.remove('hidden');
+          if (roleBox && this.state.enableSecretRole) roleBox.classList.remove('hidden');
         }
       },
 
@@ -1894,26 +2070,47 @@
                 ${roundButtons}
               </div>
 
-              <!-- 3 Gimmick Toggles -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                <!-- Lens Toggle -->
-                <div onclick="app.toggleOption('enableLensMode')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
-                  this.state.enableLensMode
+              <!-- 4 Gimmick Toggles -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <!-- Shared Lens Toggle -->
+                <div onclick="app.toggleOption('enableSharedLens')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
+                  this.state.enableSharedLens
+                    ? 'bg-cyan-950/55 border-cyan-400 shadow-md'
+                    : 'bg-alch-bg/60 border-white/10 opacity-70'
+                }">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-black text-xs sm:text-sm text-cyan-300 flex items-center gap-1.5">
+                      <i class="fa-solid fa-glasses"></i>価値観レンズ（全員共有）
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      this.state.enableSharedLens ? 'bg-cyan-500 text-alch-bg' : 'bg-slate-700 text-slate-300'
+                    }">
+                      ${this.state.enableSharedLens ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 leading-relaxed">
+                    全員共通の視点（小学3年生・億万長者・飼い猫等）でお題の基準を統一！
+                  </p>
+                </div>
+
+                <!-- Secret Role Toggle (with Participant Impersonation) -->
+                <div onclick="app.toggleOption('enableSecretRole')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
+                  this.state.enableSecretRole
                     ? 'bg-purple-950/55 border-purple-400 shadow-md'
                     : 'bg-alch-bg/60 border-white/10 opacity-70'
                 }">
                   <div class="flex items-center justify-between mb-1">
                     <span class="font-black text-xs sm:text-sm text-purple-300 flex items-center gap-1.5">
-                      <i class="fa-solid fa-glasses"></i>価値観レンズ
+                      <i class="fa-solid fa-masks-theater"></i>秘密の視点ロール（参加者入り）
                     </span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      this.state.enableLensMode ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-300'
+                      this.state.enableSecretRole ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-300'
                     }">
-                      ${this.state.enableLensMode ? 'ON' : 'OFF'}
+                      ${this.state.enableSecretRole ? 'ON' : 'OFF'}
                     </span>
                   </div>
                   <p class="text-[11px] text-slate-300 leading-relaxed">
-                    全10種の秘密の視点ロール（小学3年生・頑固オヤジ等）を配布！
+                    各自に秘密の視点ロールを配布！<strong>「他の参加者になりきる」</strong>憑依ロール入り！
                   </p>
                 </div>
 
@@ -1941,15 +2138,15 @@
                 <!-- Scale Crystal Toggle -->
                 <div onclick="app.toggleOption('enableScaleCrystal')" class="cursor-pointer p-3.5 rounded-2xl border-2 transition ${
                   this.state.enableScaleCrystal
-                    ? 'bg-cyan-950/55 border-cyan-400 shadow-md'
+                    ? 'bg-emerald-950/55 border-emerald-400 shadow-md'
                     : 'bg-alch-bg/60 border-white/10 opacity-70'
                 }">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="font-black text-xs sm:text-sm text-cyan-300 flex items-center gap-1.5">
+                    <span class="font-black text-xs sm:text-sm text-emerald-300 flex items-center gap-1.5">
                       <i class="fa-solid fa-scale-balanced"></i>真実の天秤
                     </span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${
-                      this.state.enableScaleCrystal ? 'bg-cyan-500 text-alch-bg' : 'bg-slate-700 text-slate-300'
+                      this.state.enableScaleCrystal ? 'bg-emerald-500 text-alch-bg' : 'bg-slate-700 text-slate-300'
                     }">
                       ${this.state.enableScaleCrystal ? '1回/R' : 'OFF'}
                     </span>
@@ -1959,35 +2156,70 @@
                   </p>
                 </div>
               </div>
+
+              ${this.state.enableSecretRole ? `
+                <div class="mt-3 p-3 rounded-2xl bg-alch-bg/85 border border-purple-400/30">
+                  <div class="text-[11px] font-black text-purple-300 mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-secret"></i>秘密の視点ロールの出現バランス
+                  </div>
+                  <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+                    <button onclick="app.setSecretRoleMixMode('participant_heavy')" class="py-2 px-2 rounded-xl text-[11px] font-black border transition ${
+                      this.state.secretRoleMixMode === 'participant_heavy'
+                        ? 'bg-purple-500 text-white border-purple-300'
+                        : 'bg-alch-panel text-slate-300 border-white/10'
+                    }">
+                      参加者なりきり多め
+                    </button>
+                    <button onclick="app.setSecretRoleMixMode('participant_only')" class="py-2 px-2 rounded-xl text-[11px] font-black border transition ${
+                      this.state.secretRoleMixMode === 'participant_only'
+                        ? 'bg-amber-500 text-alch-bg border-amber-300'
+                        : 'bg-alch-panel text-slate-300 border-white/10'
+                    }">
+                      全員参加者なりきり
+                    </button>
+                    <button onclick="app.setSecretRoleMixMode('mixed')" class="py-2 px-2 rounded-xl text-[11px] font-black border transition ${
+                      this.state.secretRoleMixMode === 'mixed'
+                        ? 'bg-cyan-500 text-alch-bg border-cyan-300'
+                        : 'bg-alch-panel text-slate-300 border-white/10'
+                    }">
+                      キャラ＋参加者均等
+                    </button>
+                  </div>
+                </div>
+              ` : ''}
             </div>
 
-            <!-- Step 3: Topic Category -->
+            <!-- Step 3: Topic Category & Start Button -->
             <div class="bg-alch-surface rounded-3xl p-4 sm:p-6 shadow-mystic border border-white/10">
               <h3 class="font-black text-base sm:text-lg text-white flex items-center gap-2 mb-3">
                 <span class="w-7 h-7 rounded-xl bg-emerald-500 text-alch-bg font-num font-black text-sm flex items-center justify-center">3</span>
-                お題のジャンルを選択
+                調合テーマのジャンル選択
               </h3>
 
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 ${categoryCards}
               </div>
+
               ${customTopicForm}
             </div>
 
             <!-- Start Button -->
-            <button onclick="app.startGame()" class="w-full py-4 sm:py-5 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 hover:brightness-105 text-alch-bg font-black text-lg sm:text-xl shadow-gold-glow btn-tactile flex items-center justify-center gap-3">
-              <i class="fa-solid fa-wand-sparkles"></i>
-              <span>調合の儀を開始する！</span>
-            </button>
+            <div class="pb-8">
+              <button onclick="app.startGame()" class="w-full py-4 sm:py-5 rounded-3xl bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 hover:brightness-105 text-alch-bg font-black text-lg sm:text-xl shadow-gold-glow btn-tactile flex items-center justify-center gap-3">
+                <i class="fa-solid fa-flask-vial"></i>
+                <span>価値観調合の儀を始める！</span>
+              </button>
+            </div>
           </div>
         `;
       },
 
       // --------------------------------------------------------------------------
-      // Reusable Topic & Taboo Banner
+      // Reusable Topic, Shared Lens & Taboo Banner
       // --------------------------------------------------------------------------
       renderTopicBanner(allowShuffle = true) {
         const topic = this.state.currentTopic;
+        const sharedLens = this.state.currentSharedLens;
         const taboo = this.state.currentTaboo;
 
         return `
@@ -1998,18 +2230,26 @@
                   <i class="fa-solid ${topic.categoryIcon}"></i>
                   ${this.escapeHtml(topic.categoryName)}
                 </span>
-                ${this.state.enableLensMode ? `
+                ${this.state.enableSecretRole ? `
                   <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-[11px] font-black">
-                    <i class="fa-solid fa-glasses"></i>価値観レンズON
+                    <i class="fa-solid fa-masks-theater"></i>秘密ロール（参加者入り）ON
                   </span>
                 ` : ''}
               </div>
 
               ${allowShuffle ? `
-                <button onclick="app.shuffleTopicAndTaboo()" class="px-3 py-1.5 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-amber-400/25 text-amber-300 text-xs font-black flex items-center gap-1.5 transition btn-tactile">
-                  <i class="fa-solid fa-shuffle"></i>
-                  <span>お題シャッフル</span>
-                </button>
+                <div class="flex items-center gap-1.5">
+                  ${sharedLens ? `
+                    <button onclick="app.shuffleSharedLensOnly()" class="px-2.5 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900/80 border border-cyan-400/35 text-cyan-300 text-xs font-black flex items-center gap-1 transition btn-tactile" title="共通レンズだけ変更">
+                      <i class="fa-solid fa-glasses"></i>
+                      <span class="hidden sm:inline">レンズ変更</span>
+                    </button>
+                  ` : ''}
+                  <button onclick="app.shuffleTopicAndTaboo()" class="px-3 py-1.5 rounded-xl bg-alch-panel hover:bg-indigo-900/80 border border-amber-400/25 text-amber-300 text-xs font-black flex items-center gap-1.5 transition btn-tactile">
+                    <i class="fa-solid fa-shuffle"></i>
+                    <span>お題シャッフル</span>
+                  </button>
+                </div>
               ` : ''}
             </div>
 
@@ -2019,6 +2259,23 @@
                 「${this.escapeHtml(topic.title)}」
               </h2>
             </div>
+
+            ${sharedLens ? `
+              <div class="my-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/90 via-indigo-950/90 to-cyan-950/90 border-2 border-cyan-400/50 shadow-md">
+                <div class="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-cyan-400 text-alch-bg text-[11px] font-black">
+                    <i class="fa-solid fa-glasses"></i>全員共通・価値観レンズ
+                  </span>
+                  <span class="font-black text-sm sm:text-base ${sharedLens.color} flex items-center gap-1.5">
+                    <i class="fa-solid ${sharedLens.icon}"></i>
+                    <span>${this.escapeHtml(sharedLens.name)}</span>
+                  </span>
+                </div>
+                <p class="text-xs text-cyan-100 font-bold leading-relaxed">
+                  ${this.escapeHtml(sharedLens.desc)} <span class="text-cyan-300/90 font-normal">（${this.escapeHtml(sharedLens.tip)}）</span>
+                </p>
+              </div>
+            ` : ''}
 
             <!-- 1 to 100 Scale Guide -->
             <div class="mt-2.5 bg-alch-bg/90 rounded-2xl p-3 border border-white/10">
@@ -2098,18 +2355,22 @@
                     ${player.number}
                   </div>
 
-                  ${this.state.enableLensMode ? `
-                    <div class="mt-3 p-3.5 rounded-2xl bg-white/75 border border-amber-800/20 text-left">
-                      <div class="text-[10px] font-bold text-amber-900/70 uppercase tracking-wider">あなたの価値観レンズ（秘密の視点）</div>
+                  ${this.state.enableSecretRole ? `
+                    <div class="mt-3 p-3.5 rounded-2xl ${player.role.isParticipant ? 'bg-rose-950/10 border-2 border-rose-700/40' : 'bg-white/75 border border-amber-800/20'} text-left">
+                      <div class="flex items-center justify-between gap-1">
+                        <span class="text-[10px] font-black ${player.role.isParticipant ? 'text-rose-800' : 'text-amber-900/70'} uppercase tracking-wider">
+                          ${player.role.isParticipant ? '🔥 憑依ミッション（参加者なりきり）' : 'あなたの秘密の視点ロール'}
+                        </span>
+                      </div>
                       <div class="font-black text-sm sm:text-base text-slate-900 mt-0.5 flex items-center gap-1.5">
-                        <i class="fa-solid ${player.lens.icon} text-amber-700"></i>
-                        <span>${this.escapeHtml(player.lens.name)}</span>
+                        <i class="fa-solid ${player.role.icon} ${player.role.isParticipant ? 'text-rose-700' : 'text-amber-700'}"></i>
+                        <span>${this.escapeHtml(player.role.name)}</span>
                       </div>
                       <p class="text-xs text-slate-800 mt-1 leading-relaxed font-medium">
-                        ${this.escapeHtml(player.lens.desc)}
+                        ${this.escapeHtml(player.role.desc)}
                       </p>
-                      <div class="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-600/30 text-[11px] text-amber-950 font-bold">
-                        <i class="fa-solid fa-lightbulb mr-1 text-amber-700"></i>${this.escapeHtml(player.lens.tip)}
+                      <div class="mt-2 px-2.5 py-1.5 rounded-xl ${player.role.isParticipant ? 'bg-rose-500/15 border border-rose-600/30 text-rose-950' : 'bg-amber-500/20 border border-amber-600/30 text-amber-950'} text-[11px] font-bold">
+                        <i class="fa-solid fa-lightbulb mr-1 ${player.role.isParticipant ? 'text-rose-700' : 'text-amber-700'}"></i>${this.escapeHtml(player.role.tip)}
                       </div>
                     </div>
                   ` : ''}
@@ -2124,7 +2385,7 @@
                     </div>
                     <div class="font-black text-lg text-white mb-1">タップして秘密を確認</div>
                     <div class="text-xs text-slate-400 font-bold">
-                      ${this.state.enableLensMode ? '秘密の数字 ＆ 価値観レンズ' : '秘密の数字（1〜100）'}
+                      ${this.state.enableSecretRole ? '秘密の数字 ＆ 秘密の視点ロール' : '秘密の数字（1〜100）'}
                     </div>
                   </div>
                 `}
@@ -2211,7 +2472,7 @@
                   </div>
 
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <button onclick="app.openPlayerSecretModal(${idx})" class="px-2.5 py-1 rounded-lg bg-alch-panel hover:bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold transition" title="自分の数字とレンズをこっそり再確認">
+                    <button onclick="app.openPlayerSecretModal(${idx})" class="px-2.5 py-1 rounded-lg bg-alch-panel hover:bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-bold transition" title="自分の数字と視点ロールをこっそり再確認">
                       <i class="fa-solid fa-eye"></i> こっそり再確認
                     </button>
                     <span class="text-slate-500 hidden sm:inline px-0.5" title="ドラッグで並び替え">
@@ -2298,7 +2559,7 @@
                 <div>
                   <div class="font-black text-sm text-white">1位（最小）→ ${players.length}位（最大）の昇順に並べよう！</div>
                   <div class="text-[11px] text-slate-400">
-                    ${this.state.enableLensMode ? '誰がどの「価値観レンズ」か推理しつつ、' : ''}数字差が10以内のペアには「共鳴リンク」を繋ごう！
+                    ${this.state.enableSecretRole ? '誰が「誰になりきっているか」推理しつつ、' : ''}数字差が10以内のペアには「共鳴リンク」を繋ごう！
                   </div>
                 </div>
               </div>
@@ -2391,10 +2652,10 @@
                       <div class="font-num font-black text-6xl ${isMistake ? 'text-rose-600' : 'text-slate-900'} tracking-tighter">
                         ${p.number}
                       </div>
-                      ${this.state.enableLensMode ? `
-                        <div class="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border ${p.lens.parchmentBadge}">
-                          <i class="fa-solid ${p.lens.icon}"></i>
-                          <span>${this.escapeHtml(p.lens.name.replace('レンズ', ''))}</span>
+                      ${this.state.enableSecretRole ? `
+                        <div class="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black border max-w-full truncate ${p.role.parchmentBadge}">
+                          <i class="fa-solid ${p.role.icon}"></i>
+                          <span class="truncate">${this.escapeHtml(p.role.isParticipant ? `${p.role.targetName}憑依` : p.role.name.replace('ロール', ''))}</span>
                         </div>
                       ` : ''}
                     </div>
@@ -2425,9 +2686,9 @@
                   <div>
                     <div class="font-black text-sm text-white flex flex-wrap items-center gap-1.5">
                       <span>${this.escapeHtml(p.name)}</span>
-                      ${this.state.enableLensMode ? `
-                        <span class="text-[11px] px-2 py-0.5 rounded-full border ${p.lens.badgeClass}">
-                          <i class="fa-solid ${p.lens.icon} mr-1"></i>${this.escapeHtml(p.lens.name)}
+                      ${this.state.enableSecretRole ? `
+                        <span class="text-[11px] px-2 py-0.5 rounded-full border ${p.role.badgeClass}">
+                          <i class="fa-solid ${p.role.icon} mr-1"></i>${this.escapeHtml(p.role.name)}
                         </span>
                       ` : ''}
                     </div>
@@ -2483,7 +2744,7 @@
               <div class="bg-alch-panel/75 rounded-2xl p-4 border border-white/10">
                 <div class="text-xs font-black text-amber-300 mb-3 flex items-center justify-center gap-1.5">
                   <i class="fa-solid fa-magnifying-glass"></i>
-                  <span>価値観ズレ検証ボード（実際の数字 ＆ レンズ正体 ＆ 例えワード）</span>
+                  <span>価値観ズレ検証ボード（実際の数字 ＆ 秘密ロール正体 ＆ 例えワード）</span>
                 </div>
                 <div class="space-y-2 max-w-2xl mx-auto">
                   ${verificationRows}
@@ -2620,6 +2881,44 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       app.init();
+
+      // Dynamic Inline Web App Manifest for PWA Standalone Mode
+      try {
+        const iconUrl = new URL('./icon.png', window.location.href).href;
+        const manifestObj = {
+          name: 'シンクロ・アルケミスト 〜価値観調合の儀〜',
+          short_name: 'シンクロ錬金',
+          start_url: window.location.href,
+          display: 'standalone',
+          background_color: '#080C1A',
+          theme_color: '#080C1A',
+          orientation: 'portrait-primary',
+          icons: [
+            { src: iconUrl, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+            { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = URL.createObjectURL(manifestBlob);
+        document.head.appendChild(manifestLink);
+      } catch (e) {
+        // Ignore if sandboxed
+      }
+
+      // Request Screen Wake Lock during gameplay
+      if ('wakeLock' in navigator) {
+        const requestWakeLock = async () => {
+          try {
+            await navigator.wakeLock.request('screen');
+          } catch (err) {}
+        };
+        requestWakeLock();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') requestWakeLock();
+        });
+      }
     });
   </script>
 </body>
